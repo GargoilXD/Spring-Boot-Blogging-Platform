@@ -9,7 +9,7 @@ import java.sql.SQLException;
 @Getter
 @RequiredArgsConstructor
 public final class User {
-    private final long id;
+    private final Long id;
     private final String username;
     private final String passwordHash;
     private final String fullName;
