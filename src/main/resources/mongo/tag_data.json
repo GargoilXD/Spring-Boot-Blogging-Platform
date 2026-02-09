@@ -1,0 +1,17 @@
+[
+  { "postId": 1, "tags": ["Productivity", "LifeHacks", "Personal Growth"] },
+  { "postId": 2, "tags": ["Cooking", "Recipe", "Food"] },
+  { "postId": 3, "tags": ["AI", "Technology", "Tech"] },
+  { "postId": 4, "tags": ["Wellness", "Mindfulness", "Personal Growth", "Routine"] },
+  { "postId": 5, "tags": ["Local", "Nature", "Wellness"] },
+  { "postId": 6, "tags": ["Productivity", "LifeHacks", "Personal Growth"] },
+  { "postId": 7, "tags": ["Routine", "Personal Growth", "Mindfulness"] },
+  { "postId": 8, "tags": ["Personal Growth", "LifeHacks", "Wellness"] },
+  { "postId": 9, "tags": ["Cooking", "Recipe", "Food"] },
+  { "postId": 10, "tags": ["Productivity", "Wellness", "Nature"] },
+  { "postId": 11, "tags": ["Personal Growth", "LifeHacks", "Mindfulness"] },
+  { "postId": 12, "tags": ["Routine", "Personal Growth", "Wellness"] },
+  { "postId": 13, "tags": ["Personal Growth", "LifeHacks", "Wellness"] },
+  { "postId": 14, "tags": ["Cooking", "Recipe", "Food"] },
+  { "postId": 15, "tags": ["Productivity", "Personal Growth", "Mindfulness"] }
+]
