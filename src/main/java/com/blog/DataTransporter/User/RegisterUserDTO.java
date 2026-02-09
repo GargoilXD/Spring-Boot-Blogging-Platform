@@ -2,7 +2,13 @@ package com.blog.DataTransporter.User;
 
 import jakarta.validation.constraints.NotBlank;
 
-public record RegisterUserDTO(@NotBlank String username, @NotBlank String password, @NotBlank String fullName, @NotBlank String email, @NotBlank String gender) {
+public record RegisterUserDTO(
+    @NotBlank String username,
+    @NotBlank String password,
+    @NotBlank String fullName,
+    @NotBlank String email,
+    @NotBlank String gender
+) {
     public RegisterUserDTO withPasswordHash(String newPassword) {
         return new RegisterUserDTO(username, newPassword, fullName, email, gender);
     }

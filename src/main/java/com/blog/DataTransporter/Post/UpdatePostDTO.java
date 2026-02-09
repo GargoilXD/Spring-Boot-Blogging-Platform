@@ -4,7 +4,12 @@ import com.blog.Model.Post;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public record UpdatePostDTO(Long postId, @NotBlank String title, @NotBlank String body, @NotNull boolean draft) {
+public record UpdatePostDTO(
+    Long postId,
+    @NotBlank String title,
+    @NotBlank String body,
+    @NotNull boolean draft
+) {
     public UpdatePostDTO(Post post) {
         this(post.getId(), post.getTitle(), post.getBody(), post.isDraft());
     }

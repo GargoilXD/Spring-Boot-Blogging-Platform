@@ -1,0 +1,68 @@
+type Query {
+    getPostByID(id: ID!): Post
+    getAllPosts(page: Int, size: Int): [Post]
+    getAllTags: [String]
+    getTagsForPost(postID: ID!): [String]
+    getCommentsForPost(postID: ID!): [Comment]
+}
+
+type Mutation {
+    createPost(input: CreatePostInput!): Post
+    updatePost(id: ID!, input: UpdatePostInput!): Post
+    deletePost(id: ID!): Boolean
+    login(username: String!, password: String!): Boolean
+    register(input: RegisterInput!): Boolean
+    addComment(input: CommentInput!): Boolean
+    updateComment(id: ID!, body: String!): Boolean
+    deleteComment(id: ID!): Boolean
+    setPostTags(postID: ID!, tags: [String!]!): Boolean
+}
+
+type Post {
+    id: ID!
+    userId: ID!
+    username: String!
+    title: String!
+    body: String!
+    draft: Boolean!
+    createdAt: String!
+    tags: [String]
+    comments: [Comment]
+}
+
+type Comment {
+    id: ID!
+    userId: ID!
+    postId: ID!
+    username: String!
+    body: String!
+    createdAt: String!
+}
+
+input CreatePostInput {
+    authorId: ID!
+    title: String!
+    body: String!
+    draft: Boolean
+}
+
+input UpdatePostInput {
+    title: String
+    body: String
+    draft: Boolean
+}
+
+input RegisterInput {
+    username: String!
+    password: String!
+    fullName: String!
+    email: String!
+    gender: String!
+}
+
+input CommentInput {
+    userId: ID!
+    postId: ID!
+    username: String!
+    body: String!
+}

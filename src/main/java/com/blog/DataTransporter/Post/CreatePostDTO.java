@@ -6,7 +6,12 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
-public record CreatePostDTO(@NotNull Long authorId, @NotBlank String title, @NotBlank String body, @NotNull boolean draft) {
+public record CreatePostDTO(
+    @NotNull Long authorId,
+    @NotBlank String title,
+    @NotBlank String body,
+    @NotNull boolean draft
+) {
     public CreatePostDTO(Post post) {
         this(post.getUserId(), post.getTitle(), post.getBody(), post.isDraft());
     }
