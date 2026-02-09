@@ -1,11 +1,11 @@
 INSERT INTO users (username, password, full_name, email, gender) VALUES
-('Kobby', '$2a$10$GmFVqJhXyZ7Q8v9W0X1Y2u3Z4a5b6c7d8e9f0g1h2i3j4k5l6m7n', 'Kwabena Edusei', 'kobby@gmail.com', 'M'),
-('Ama', '$2a$10$NpOqRsTuVwXyZ1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t', 'Ama Asante', 'ama@gmail.com', 'F'),
-('Kwame', '$2a$10$GmFVqJhXyZ7Q8v9W0X1Y2u3Z4a5b6c7d8e9f0g1h2i3j4k5l6m7n', 'Kwame Nkrumah', 'kwame@example.com', 'M'),
-('Efia', '$2a$10$NpOqRsTuVwXyZ1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t', 'Efia Darko', 'efia@example.com', 'F'),
-('Kofi', '$2a$10$GmFVqJhXyZ7Q8v9W0X1Y2u3Z4a5b6c7d8e9f0g1h2i3j4k5l6m7n', 'Kofi Mensah', 'kofi@example.com', 'M'),
-('Adwoa', '$2a$10$NpOqRsTuVwXyZ1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t', 'Adwoa Boateng', 'adwoa@example.com', 'F'),
-('Yaw', '$2a$10$GmFVqJhXyZ7Q8v9W0X1Y2u3Z4a5b6c7d8e9f0g1h2i3j4k5l6m7n', 'Yaw Osei', 'yaw@example.com', 'M')
+('Kobby', '$argon2id$v=19$m=65536,t=3,p=4$l079JRQ4ZC565vPJp727TIUfqls2EcCNAE4zSpYn0q4$ATE6KWSwP0cH889OKqdk9KnG87NF7c6CiyX4XNLjdz4', 'Kwabena Edusei', 'kobby@gmail.com', 'M'),
+('Ama', '$argon2id$v=19$m=65536,t=3,p=4$cb9LqPfDVp4UWq16sxi9pKaYBs62qZLYbmEN4wTU9GA$knUuUmlohiQVxdN08spX8+yETI4QzaPRNBjfquhmMmg', 'Ama Asante', 'ama@gmail.com', 'F'),
+('Kwame', '$argon2id$v=19$m=65536,t=3,p=4$l079JRQ4ZC565vPJp727TIUfqls2EcCNAE4zSpYn0q4$ATE6KWSwP0cH889OKqdk9KnG87NF7c6CiyX4XNLjdz4', 'Kwame Nkrumah', 'kwame@example.com', 'M'),
+('Efia', '$argon2id$v=19$m=65536,t=3,p=4$cb9LqPfDVp4UWq16sxi9pKaYBs62qZLYbmEN4wTU9GA$knUuUmlohiQVxdN08spX8+yETI4QzaPRNBjfquhmMmg', 'Efia Darko', 'efia@example.com', 'F'),
+('Kofi', '$argon2id$v=19$m=65536,t=3,p=4$l079JRQ4ZC565vPJp727TIUfqls2EcCNAE4zSpYn0q4$ATE6KWSwP0cH889OKqdk9KnG87NF7c6CiyX4XNLjdz4', 'Kofi Mensah', 'kofi@example.com', 'M'),
+('Adwoa', '$argon2id$v=19$m=65536,t=3,p=4$cb9LqPfDVp4UWq16sxi9pKaYBs62qZLYbmEN4wTU9GA$knUuUmlohiQVxdN08spX8+yETI4QzaPRNBjfquhmMmg', 'Adwoa Boateng', 'adwoa@example.com', 'F'),
+('Yaw', '$argon2id$v=19$m=65536,t=3,p=4$l079JRQ4ZC565vPJp727TIUfqls2EcCNAE4zSpYn0q4$ATE6KWSwP0cH889OKqdk9KnG87NF7c6CiyX4XNLjdz4', 'Yaw Osei', 'yaw@example.com', 'M')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO posts (user_id, title, body, is_draft) VALUES

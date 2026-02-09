@@ -1,11 +1,14 @@
 package com.blog.Service;
 
 import com.blog.DataAccessor.Interface.PostDataAccessor;
-import com.blog.DataTransporter.PostDataTransporter;
+import com.blog.DataTransporter.Post.CreatePostDTO;
+import com.blog.DataTransporter.Post.GetPostDTO;
+import com.blog.DataTransporter.Post.UpdatePostDTO;
 import com.blog.Model.Post;
 
 import jakarta.persistence.EntityNotFoundException;
 
+import jakarta.validation.constraints.NotNull;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
@@ -19,29 +22,22 @@ public class PostService {
     public PostService(PostDataAccessor dataAccessor) {
         this.dataAccessor = dataAccessor;
     }
-    public Optional<Post> getPost(Long id) {
+    public Optional<Post> getPost(long id) {
         return dataAccessor.findByID(id);
     }
-    public List<Post> getAllPosts() {
-        return dataAccessor.findAll();
+    public List<Post> getAllPosts(GetPostDTO dto) {
+        return dataAccessor.findAll(dto);
+    }
+    public long countPosts() {
+        return dataAccessor.count();
     }
     @Transactional
-    public PostDataTransporter save(PostDataTransporter postData) {
-        if (postData == null) throw new IllegalArgumentException("Post data cannot be null");
-        return dataAccessor.save(postData);
+    public Post save(@NotNull CreatePostDTO dto) {
+        return dataAccessor.save(dto);
     }
     @Transactional
-    public PostDataTransporter update(Long id, String title, String body, boolean draft) {
-        Post existing = getPost(id).orElseThrow(() -> new EntityNotFoundException("Post not found: " + id));
-        PostDataTransporter dto = new PostDataTransporter(
-                id,
-                existing.getUserId(),
-                existing.getUsername(),
-                title,
-                body,
-                draft,
-                existing.getCreatedAt()
-        );
+    public Post update(@NotNull UpdatePostDTO dto) {
+        getPost(dto.postId()).orElseThrow(() -> new EntityNotFoundException("Post not found: " + dto.postId()));
         return dataAccessor.update(dto);
     }
     @Transactional

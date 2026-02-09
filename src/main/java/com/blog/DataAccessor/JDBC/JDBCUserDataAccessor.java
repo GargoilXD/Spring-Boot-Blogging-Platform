@@ -1,8 +1,8 @@
 package com.blog.DataAccessor.JDBC;
 
 import com.blog.DataAccessor.Interface.UserDataAccessor;
-import com.blog.DataTransporter.UserDataTransporter;
 import com.blog.DataAccessor.Exception.DataAccessException;
+import com.blog.DataTransporter.User.RegisterUserDTO;
 import com.blog.Model.User;
 import org.springframework.stereotype.Repository;
 
@@ -48,16 +48,16 @@ public class JDBCUserDataAccessor implements UserDataAccessor {
         }
     }
     @Override
-    public void register(UserDataTransporter udto) throws DataAccessException {
+    public void register(RegisterUserDTO dto) throws DataAccessException {
         try (Connection connection = dataSource.getConnection(); PreparedStatement statement = connection.prepareStatement(Queries.INSERT.query)) {
-            statement.setString(1, udto.username());
-            statement.setString(2, udto.passwordHash());
-            statement.setString(3, udto.fullName());
-            statement.setString(4, udto.email());
-            statement.setString(5, udto.gender());
+            statement.setString(1, dto.username());
+            statement.setString(2, dto.password());
+            statement.setString(3, dto.fullName());
+            statement.setString(4, dto.email());
+            statement.setString(5, dto.gender());
             statement.executeUpdate();
         } catch (SQLException e) {
-            throw new DataAccessException(String.format("Error Saving User: %s", udto.username()), e);
+            throw new DataAccessException(String.format("Error Saving User: %s", dto.username()), e);
         }
     }
 }

@@ -29,30 +29,22 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> handleAuthentication(AuthenticationException e) {
         log.warn("Authentication failed: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("AUTH_FAILED", "Invalid credentials"));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse("AUTH_FAILED", "Invalid credentials"));
     }
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleUserExists(UserAlreadyExistsException e) {
         log.warn("Registration failed - user exists: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new ErrorResponse("USER_EXISTS", "Username already exists"));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse("USER_EXISTS", "Username already exists"));
     }
 
     @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(
-            MethodArgumentNotValidException ex,
-            HttpHeaders headers,
-            HttpStatusCode status,
-            WebRequest request) {
-
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
             String message = error.getDefaultMessage();
             errors.put(fieldName, message);
         });
-
         log.warn("Validation failed: {}", errors);
         return ResponseEntity.badRequest().body(new ErrorResponse("VALIDATION_FAILED", errors));
     }
@@ -70,41 +62,18 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ErrorResponse> handleDataAccess(DataAccessException ex) {
         log.error("Database error", ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("DATABASE_ERROR", "A database error occurred"));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("DATABASE_ERROR", "A database error occurred"));
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex) {
         log.debug("Resource not found: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponse("NOT_FOUND", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse("NOT_FOUND", ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception e) {
         log.error("Unexpected error", e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse("SERVER_ERROR", "An unexpected error occurred"));
-    }
-
-    @Getter
-    public static class ErrorResponse {
-        private final String code;
-        private final Object message;
-        private final LocalDateTime timestamp;
-
-        public ErrorResponse(String code, Object message) {
-            this.code = code;
-            this.message = message;
-            this.timestamp = LocalDateTime.now();
-        }
-
-    }
-
-    public static class ResourceNotFoundException extends RuntimeException {
-        public ResourceNotFoundException(String message) {
-            super(message);
-        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("SERVER_ERROR", "An unexpected error occurred"));
     }
 }

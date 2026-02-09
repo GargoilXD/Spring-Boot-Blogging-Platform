@@ -12,6 +12,12 @@ public class PasswordHasher {
     private final int memory;
     private final int parallelism;
 
+    public static void main(String[] args) {
+        PasswordHasher hasher = new PasswordHasher(3, 65536, 4);
+        String hashedPassword = hasher.hashPassword("54321");
+        System.out.println(hashedPassword);
+    }
+
     public PasswordHasher(
             @Value("${security.argon2.iterations:3}") int iterations,
             @Value("${security.argon2.memory:65536}") int memory,
