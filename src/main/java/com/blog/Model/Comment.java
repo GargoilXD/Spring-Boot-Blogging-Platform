@@ -14,7 +14,7 @@ import java.time.Instant;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "comments")
+// @Document(collection = "comments")
 public class Comment {
     @Id
     private String id;
