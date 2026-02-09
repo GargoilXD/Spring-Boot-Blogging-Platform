@@ -15,7 +15,6 @@ import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -109,10 +108,4 @@ public class GraphQLResolver {
     public List<Comment> getComments(Post post) {
         return commentService.getForPost(post.getId());
     }
-    
-    // public record UpdatePostInput(String title, String body, Boolean draft) {}
-    
-    // public record RegisterInput(String username, String password, String fullName, String email, String gender) {}
-    
-    // public record CommentInput(Long userId, Long postId, String username, String body) {}
 }
