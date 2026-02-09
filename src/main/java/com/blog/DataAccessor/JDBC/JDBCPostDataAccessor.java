@@ -15,7 +15,7 @@ import java.util.Optional;
 @Repository
 public class JDBCPostDataAccessor implements PostDataAccessor {
     enum Queries {
-        GET_BY_ID("SELECT posts.id, user_id, username, title, body, posts.created_at, is_draft FROM posts JOIN users ON posts.user_id = users.id WHERE id = ?"),
+        GET_BY_ID("SELECT posts.id, user_id, username, title, body, posts.created_at, is_draft FROM posts JOIN users ON posts.user_id = users.id WHERE posts.id = ?"),
         GET_ALL("SELECT posts.id, user_id, username, title, body, posts.created_at, is_draft FROM posts JOIN users ON posts.user_id = users.id"),
         INSERT("INSERT INTO posts (user_id, title, body, is_draft) VALUES (?, ?, ?, ?) RETURNING id"),
         UPDATE("UPDATE posts SET title = ?, body = ?, is_draft = ? WHERE id = ?"),
