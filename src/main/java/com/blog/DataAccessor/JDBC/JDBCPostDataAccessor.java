@@ -4,7 +4,7 @@ import com.blog.DataAccessor.Interface.PostDataAccessor;
 import com.blog.DataTransporter.Post.CreatePostDTO;
 import com.blog.DataTransporter.Post.GetPostDTO;
 import com.blog.DataTransporter.Post.UpdatePostDTO;
-import com.blog.DataAccessor.Exception.DataAccessException;
+import com.blog.Exception.DataAccessException;
 import com.blog.Model.Post;
 import org.springframework.stereotype.Repository;
 

@@ -8,9 +8,9 @@ import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
-import com.blog.DataAccessor.Exception.DataAccessException;
-import com.blog.Service.Exception.AuthenticationException;
-import com.blog.Service.Exception.UserAlreadyExistsException;
+import com.blog.Exception.DataAccessException;
+import com.blog.Exception.AuthenticationException;
+import com.blog.Exception.UserAlreadyExistsException;
 
 @Component
 public class GraphQLExceptionHandler extends DataFetcherExceptionResolverAdapter {

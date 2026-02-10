@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Repository;
 
-import com.blog.DataAccessor.Exception.DataAccessException;
+import com.blog.Exception.DataAccessException;
 import com.blog.DataAccessor.Interface.TagDataAccessor;
 
 @Repository

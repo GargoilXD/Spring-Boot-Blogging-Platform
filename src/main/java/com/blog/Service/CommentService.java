@@ -1,6 +1,6 @@
 package com.blog.Service;
 
-import com.blog.DataAccessor.Exception.DataAccessException;
+import com.blog.Exception.DataAccessException;
 import com.blog.DataAccessor.Interface.CommentDataAccessor;
 import com.blog.DataTransporter.Comment.CreateCommentDTO;
 import com.blog.DataTransporter.Comment.UpdateCommentDTO;

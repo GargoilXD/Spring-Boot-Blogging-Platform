@@ -3,7 +3,7 @@ package com.blog.DataAccessor.MongoDB;
 import com.blog.DataTransporter.Comment.CreateCommentDTO;
 import com.blog.DataTransporter.Comment.UpdateCommentDTO;
 import com.blog.DataAccessor.Interface.CommentDataAccessor;
-import com.blog.DataAccessor.Exception.DataAccessException;
+import com.blog.Exception.DataAccessException;
 import com.blog.Model.Comment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;

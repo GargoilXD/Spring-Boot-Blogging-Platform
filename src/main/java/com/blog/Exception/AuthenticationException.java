@@ -1,4 +1,4 @@
-package com.blog.Service.Exception;
+package com.blog.Exception;
 
 public class AuthenticationException extends RuntimeException {
     public AuthenticationException(String message) {
