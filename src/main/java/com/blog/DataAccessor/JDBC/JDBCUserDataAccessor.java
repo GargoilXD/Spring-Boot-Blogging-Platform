@@ -1,7 +1,7 @@
 package com.blog.DataAccessor.JDBC;
 
 import com.blog.DataAccessor.Interface.UserDataAccessor;
-import com.blog.DataAccessor.Exception.DataAccessException;
+import com.blog.Exception.DataAccessException;
 import com.blog.DataTransporter.User.RegisterUserDTO;
 import com.blog.Model.User;
 import org.springframework.stereotype.Repository;

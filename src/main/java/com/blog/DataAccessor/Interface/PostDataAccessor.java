@@ -1,6 +1,6 @@
 package com.blog.DataAccessor.Interface;
 
-import com.blog.DataAccessor.Exception.DataAccessException;
+import com.blog.Exception.DataAccessException;
 import com.blog.DataTransporter.Post.CreatePostDTO;
 import com.blog.DataTransporter.Post.GetPostDTO;
 import com.blog.DataTransporter.Post.UpdatePostDTO;

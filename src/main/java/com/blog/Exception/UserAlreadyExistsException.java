@@ -1,4 +1,4 @@
-package com.blog.Service.Exception;
+package com.blog.Exception;
 
 public class UserAlreadyExistsException extends RuntimeException {
     public UserAlreadyExistsException(String message) {

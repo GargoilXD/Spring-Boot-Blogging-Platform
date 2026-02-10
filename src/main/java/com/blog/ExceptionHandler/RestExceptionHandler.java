@@ -1,8 +1,8 @@
 package com.blog.ExceptionHandler;
 
-import com.blog.DataAccessor.Exception.DataAccessException;
-import com.blog.Service.Exception.AuthenticationException;
-import com.blog.Service.Exception.UserAlreadyExistsException;
+import com.blog.Exception.DataAccessException;
+import com.blog.Exception.AuthenticationException;
+import com.blog.Exception.UserAlreadyExistsException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

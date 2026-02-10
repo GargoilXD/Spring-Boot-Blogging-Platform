@@ -1,4 +1,4 @@
-package com.blog.DataAccessor.Exception;
+package com.blog.Exception;
 
 public class DataAccessException extends RuntimeException {
     public DataAccessException(String message) {

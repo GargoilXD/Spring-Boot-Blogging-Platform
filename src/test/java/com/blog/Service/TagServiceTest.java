@@ -1,6 +1,6 @@
 package com.blog.Service;
 
-import com.blog.DataAccessor.Exception.DataAccessException;
+import com.blog.Exception.DataAccessException;
 import com.blog.DataAccessor.Interface.TagDataAccessor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
