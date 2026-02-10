@@ -1,22 +1,142 @@
 [
-  { "userID": 1, "username": "Kobby", "postID": 1, "body": "Great tip! I've been using this for a week and it really helps." },
-  { "userID": 2, "username": "Ama", "postID": 1, "body": "Does this work for bigger tasks too?" },
-  { "userID": 1, "username": "Kobby", "postID": 2, "body": "Love this recipe! Added some mushrooms and it turned out amazing." },
-  { "userID": 2, "username": "Ama", "postID": 3, "body": "Interesting perspective on AI collaboration." },
-  { "userID": 2, "username": "Ama", "postID": 4, "body": "I need to try this digital detox!" },
-  { "userID": 1, "username": "Kobby", "postID": 5, "body": "Found my own bench yesterday. Thanks for the inspiration!" },
-  { "userID": 1, "username": "Kobby", "postID": 6, "body": "This resonates so much! I've been trying to build a consistent morning routine too." },
-  { "userID": 2, "username": "Ama", "postID": 6, "body": "Do you use a journal? What kind?" },
-  { "userID": 3, "username": "Kwame", "postID": 7, "body": "I did a similar social media detox last year. Life-changing!" },
-  { "userID": 4, "username": "Efia", "postID": 8, "body": "So true about saying no. It's liberating once you get past the guilt." },
-  { "userID": 5, "username": "Kofi", "postID": 9, "body": "Your plantain recipe sounds delicious! Do you use overripe plantains?" },
-  { "userID": 6, "username": "Adwoa", "postID": 10, "body": "I walk daily now—best decision ever for mental clarity." },
-  { "userID": 7, "username": "Yaw", "postID": 11, "body": "The \"messy middle\" is real. Thanks for naming it!" },
-  { "userID": 1, "username": "Kobby", "postID": 12, "body": "Digital minimalism changed my life too. Started with turning off notifications." },
-  { "userID": 2, "username": "Ama", "postID": 13, "body": "Asking for help is hard but so necessary. Great reminder!" },
-  { "userID": 3, "username": "Kwame", "postID": 14, "body": "Made your soup last night—perfect for the rainy weather!" },
-  { "userID": 4, "username": "Efia", "postID": 15, "body": "I struggle with deep work. Any tips for avoiding the urge to check email?" },
-  { "userID": 5, "username": "Kofi", "postID": 2, "body": "Tried your pasta recipe—added mushrooms like you suggested. Amazing!" },
-  { "userID": 6, "username": "Adwoa", "postID": 4, "body": "Did your screen-free hour become a daily habit?" },
-  { "userID": 7, "username": "Yaw", "postID": 1, "body": "The 5-minute rule saved my productivity this week. Thank you!" }
+  {
+    "userId": 1,
+    "username": "Kobby",
+    "postId": 1,
+    "body": "Great tip! I've been using this for a week and it really helps.",
+    "createdAt": "2026-01-25T14:30:00Z"
+  },
+  {
+    "userId": 2,
+    "username": "Ama",
+    "postId": 1,
+    "body": "Does this work for bigger tasks too?",
+    "createdAt": "2026-01-26T09:15:00Z"
+  },
+  {
+    "userId": 1,
+    "username": "Kobby",
+    "postId": 2,
+    "body": "Love this recipe! Added some mushrooms and it turned out amazing.",
+    "createdAt": "2026-01-27T18:45:00Z"
+  },
+  {
+    "userId": 2,
+    "username": "Ama",
+    "postId": 3,
+    "body": "Interesting perspective on AI collaboration.",
+    "createdAt": "2026-01-28T11:20:00Z"
+  },
+  {
+    "userId": 2,
+    "username": "Ama",
+    "postId": 4,
+    "body": "I need to try this digital detox!",
+    "createdAt": "2026-01-29T16:10:00Z"
+  },
+  {
+    "userId": 1,
+    "username": "Kobby",
+    "postId": 5,
+    "body": "Found my own bench yesterday. Thanks for the inspiration!",
+    "createdAt": "2026-01-30T08:55:00Z"
+  },
+  {
+    "userId": 1,
+    "username": "Kobby",
+    "postId": 6,
+    "body": "This resonates so much! I've been trying to build a consistent morning routine too.",
+    "createdAt": "2026-01-31T07:40:00Z"
+  },
+  {
+    "userId": 2,
+    "username": "Ama",
+    "postId": 6,
+    "body": "Do you use a journal? What kind?",
+    "createdAt": "2026-02-01T13:25:00Z"
+  },
+  {
+    "userId": 3,
+    "username": "Kwame",
+    "postId": 7,
+    "body": "I did a similar social media detox last year. Life-changing!",
+    "createdAt": "2026-02-02T19:50:00Z"
+  },
+  {
+    "userId": 4,
+    "username": "Efia",
+    "postId": 8,
+    "body": "So true about saying no. It's liberating once you get past the guilt.",
+    "createdAt": "2026-02-03T10:05:00Z"
+  },
+  {
+    "userId": 5,
+    "username": "Kofi",
+    "postId": 9,
+    "body": "Your plantain recipe sounds delicious! Do you use overripe plantains?",
+    "createdAt": "2026-02-04T15:30:00Z"
+  },
+  {
+    "userId": 6,
+    "username": "Adwoa",
+    "postId": 10,
+    "body": "I walk daily now—best decision ever for mental clarity.",
+    "createdAt": "2026-02-05T12:15:00Z"
+  },
+  {
+    "userId": 7,
+    "username": "Yaw",
+    "postId": 11,
+    "body": "The \"messy middle\" is real. Thanks for naming it!",
+    "createdAt": "2026-02-06T17:40:00Z"
+  },
+  {
+    "userId": 1,
+    "username": "Kobby",
+    "postId": 12,
+    "body": "Digital minimalism changed my life too. Started with turning off notifications.",
+    "createdAt": "2026-02-07T09:20:00Z"
+  },
+  {
+    "userId": 2,
+    "username": "Ama",
+    "postId": 13,
+    "body": "Asking for help is hard but so necessary. Great reminder!",
+    "createdAt": "2026-02-08T14:55:00Z"
+  },
+  {
+    "userId": 3,
+    "username": "Kwame",
+    "postId": 14,
+    "body": "Made your soup last night—perfect for the rainy weather!",
+    "createdAt": "2026-02-09T20:10:00Z"
+  },
+  {
+    "userId": 4,
+    "username": "Efia",
+    "postId": 15,
+    "body": "I struggle with deep work. Any tips for avoiding the urge to check email?",
+    "createdAt": "2026-02-10T06:30:00Z"
+  },
+  {
+    "userId": 5,
+    "username": "Kofi",
+    "postId": 2,
+    "body": "Tried your pasta recipe—added mushrooms like you suggested. Amazing!",
+    "createdAt": "2026-02-10T07:00:00Z"
+  },
+  {
+    "userId": 6,
+    "username": "Adwoa",
+    "postId": 4,
+    "body": "Did your screen-free hour become a daily habit?",
+    "createdAt": "2026-02-10T07:05:00Z"
+  },
+  {
+    "userId": 7,
+    "username": "Yaw",
+    "postId": 1,
+    "body": "The 5-minute rule saved my productivity this week. Thank you!",
+    "createdAt": "2026-02-10T07:08:00Z"
+  }
 ]

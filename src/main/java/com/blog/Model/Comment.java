@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.AllArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.Instant;
@@ -13,16 +14,16 @@ import java.time.Instant;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-// @Document(collection = "comments")
+@Document(collection = "comments")
 public class Comment {
     @Id
     private String id;
 
-    @Field("user_id")
-    private long userId;
+    @Field("userId")
+    private Long userId;
 
-    @Field("post_id")
-    private long postId;
+    @Field("postId")
+    private Long postId;
 
     @Field("username")
     private String username;
@@ -30,7 +31,7 @@ public class Comment {
     @Field("body")
     private String body;
 
-    @Field("created_at")
+    @Field("createdAt")
     private Instant createdAt;
 
     public Comment(long userId, long postId, String username, String body) {
