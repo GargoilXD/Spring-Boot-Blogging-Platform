@@ -1,7 +1,7 @@
 package com.blog.Service;
 
 import com.blog.Exception.DataAccessException;
-import com.blog.DataAccessor.Interface.TagDataAccessor;
+import com.blog.Repository.TagRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 class TagServiceTest {
 
     @Mock
-    private TagDataAccessor dataAccessor;
+    private TagRepository dataAccessor;
 
     @InjectMocks
     private TagService tagService;

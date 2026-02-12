@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("api/tags")
-@Tag(name = "Tags", description = "Tag management APIs for managing blog post tags and categories")
+//@RestController
+//@RequestMapping("api/tags")
+//@Tag(name = "Tags", description = "Tag management APIs for managing blog post tags and categories")
 public class RestTagController {
     private final TagService tagService;
     

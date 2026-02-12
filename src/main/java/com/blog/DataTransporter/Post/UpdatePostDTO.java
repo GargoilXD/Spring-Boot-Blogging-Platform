@@ -8,7 +8,11 @@ import jakarta.validation.constraints.NotNull;
 @Schema(description = "Data for updating an existing blog post")
 public record UpdatePostDTO(
     @Schema(description = "ID of the post to update", example = "1")
-    Long postId,
+    //@NotNull
+    Integer postId,
+    @NotNull
+    @Schema(description = "ID of the user to update", example = "1")
+    Integer userId,
     @NotBlank
     @Schema(description = "Updated title of the blog post", example = "My Updated Blog Post", required = true)
     String title,
@@ -20,9 +24,9 @@ public record UpdatePostDTO(
     boolean draft
 ) {
     public UpdatePostDTO(Post post) {
-        this(post.getId(), post.getTitle(), post.getBody(), post.isDraft());
+        this(post.getId(), post.getUserId(), post.getTitle(), post.getBody(), post.isDraft());
     }
     public Post toEntity() {
-        return new Post(postId, null, null, title, body, draft, null);
+        return new Post(postId, userId, title, body, draft);
     }
 }

@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 public record CreatePostDTO(
     @NotNull
     @Schema(description = "ID of the post author", example = "1", required = true)
-    Long authorId,
+    Integer authorId,
     @NotBlank
     @Schema(description = "Title of the blog post", example = "My First Blog Post", required = true)
     String title,
@@ -26,9 +26,9 @@ public record CreatePostDTO(
         this(post.getUserId(), post.getTitle(), post.getBody(), post.isDraft());
     }
     public Post toEntity() {
-        return new Post(null, authorId, null, title, body, draft, null);
+        return new Post(null, authorId, title, body, draft);
     }
-    public Post toEntity(Long Id, String username, LocalDateTime createdAt) {
-        return new Post(Id, authorId, username, title, body, draft, null);
+    public Post toEntity(Integer Id, LocalDateTime createdAt) {
+        return new Post(Id, authorId, title, body, draft);
     }
 }

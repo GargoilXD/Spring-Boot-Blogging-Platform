@@ -20,6 +20,7 @@ public class GetPostDTO {
     @NotBlank
     String direction = "DESC";
 
+
     public void validate() {
         if (sortBy == null || sortBy.trim().isEmpty()) throw new IllegalArgumentException("Sort By cannot be empty");
         switch (Objects.requireNonNull(sortBy).toLowerCase().trim()) {

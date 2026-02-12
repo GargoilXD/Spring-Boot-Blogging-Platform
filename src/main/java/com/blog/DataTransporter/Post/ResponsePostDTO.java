@@ -9,10 +9,10 @@ import jakarta.validation.constraints.NotNull;
 public record ResponsePostDTO(
     @NotNull
     @Schema(description = "Unique identifier of the post", example = "1")
-    Long postId,
+    Integer postId,
     @NotNull
     @Schema(description = "ID of the post author", example = "1")
-    Long authorId,
+    Integer authorId,
     @NotBlank
     @Schema(description = "Title of the blog post", example = "My First Blog Post")
     String title,

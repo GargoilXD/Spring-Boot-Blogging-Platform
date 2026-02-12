@@ -1,6 +1,6 @@
 package com.blog.Service;
 
-import com.blog.DataAccessor.Interface.UserDataAccessor;
+import com.blog.Repository.UserRepository;
 import com.blog.DataTransporter.User.RegisterUserDTO;
 import com.blog.Model.User;
 import com.blog.Exception.AuthenticationException;
@@ -24,7 +24,7 @@ import static org.mockito.Mockito.*;
 class AuthenticationServiceTest {
 
     @Mock
-    private UserDataAccessor dataAccessor;
+    private UserRepository dataAccessor;
 
     @Mock
     private PasswordHasher passwordHasher;
@@ -41,7 +41,7 @@ class AuthenticationServiceTest {
         hashedPassword = "$argon2id$v=19$m=65536,t=3,p=4$hashedPasswordExample";
 
         testUser = new User(
-                1L,
+                1,
                 "johndoe",
                 hashedPassword,
                 "John Doe",

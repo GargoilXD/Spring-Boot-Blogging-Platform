@@ -1,7 +1,7 @@
 package com.blog.Service;
 
 import com.blog.Exception.DataAccessException;
-import com.blog.DataAccessor.Interface.TagDataAccessor;
+import com.blog.Repository.TagRepository;
 
 import java.util.HashMap;
 import java.util.List;
@@ -11,28 +11,30 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 
-@Service
+//@Service
 public class TagService {
-    TagDataAccessor dataAccessor;
+    TagRepository repository;
 
-    public TagService(TagDataAccessor dataAccessor) {
-        this.dataAccessor = dataAccessor;
+    public TagService(TagRepository repository) {
+        this.repository = repository;
     }
     @Cacheable(cacheNames = "tags")
     public List<String> getAllTags() throws DataAccessException {
-        return dataAccessor.getAllTags();
+        return repository.getAllTags();
     }
     @Cacheable(cacheNames = "tagsByPosts")
     public HashMap<Long, List<String>> getAllTagsByPosts() throws DataAccessException {
-        return dataAccessor.getAllTagsByPosts();
+        return new HashMap<>();//repository.findAllById();
     }
     @Cacheable(cacheNames = "tagsForPost", key = "#ID")
     public List<String> getForPost(long ID) throws DataAccessException {
-        return dataAccessor.getTagsForPost(ID);
+        throw new UnsupportedOperationException("getForPost");
+//        return repository.getTagsForPost(ID);
     }
     @Cacheable(cacheNames = "tagsForPost", key = "#PostID")
     public List<String> getTagsForPost(long PostID) throws DataAccessException {
-        return dataAccessor.getTagsForPost(PostID);
+        throw new UnsupportedOperationException("getForPost");
+//        return repository.getTagsForPost(PostID);
     }
     @Caching(evict = {
         @CacheEvict(cacheNames = "tagsForPost", key = "#PostID"),
@@ -40,6 +42,7 @@ public class TagService {
         @CacheEvict(cacheNames = "tags", allEntries = true)
     })
     public void setPostTags(long PostID, List<String> tags) throws DataAccessException {
-        dataAccessor.setPostTags(PostID, tags);
+        throw new UnsupportedOperationException("getForPost");
+//        repository.setPostTags(PostID, tags);
     }
 }

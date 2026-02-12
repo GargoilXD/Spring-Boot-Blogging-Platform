@@ -79,25 +79,8 @@ public class RestPostController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<Page<ResponsePostDTO>> getAllPosts(
-        @Parameter(description = "Page number (0-indexed)", example = "0")
-        @RequestParam(defaultValue = "0") int page,
-        @Parameter(description = "Number of items per page", example = "10")
-        @RequestParam(defaultValue = "10") int size,
-        @Parameter(description = "Field to sort by", example = "created_at")
-        @RequestParam(defaultValue = "created_at") String sortBy,
-        @Parameter(description = "Sort direction (ASC or DESC)", example = "DESC")
-        @RequestParam(defaultValue = "DESC") String direction
-    ) {
-        GetPostDTO dto = new GetPostDTO(page, size, sortBy, direction);
-        List<Post> posts = postService.getAllPosts(dto);
-        long totalCount = postService.countPosts();
-        Sort.Direction sortDirection = Sort.Direction.fromString(direction);
-        Sort sort = Sort.by(sortDirection, sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-        List<ResponsePostDTO> responsePosts = posts.stream().map(ResponsePostDTO::new).toList();
-        Page<ResponsePostDTO> pageResult = new PageImpl<>(responsePosts, pageable, totalCount);
-        return ResponseEntity.ok(pageResult);
+    public ResponseEntity<Page<ResponsePostDTO>> getAllPosts(Pageable pageable) {
+        return ResponseEntity.ok(postService.getAllPosts(pageable).map(ResponsePostDTO::new));
     }
     @PostMapping
     @Operation(
@@ -144,10 +127,10 @@ public class RestPostController {
     })
     public ResponseEntity<ResponsePostDTO> updatePost(
         @Parameter(description = "ID of the post to update", required = true, example = "1")
-        @PathVariable @Min(1) Long id,
+        @PathVariable @Min(1) Integer id,
         @Valid @RequestBody UpdatePostDTO updateDTO
     ) {
-        ResponsePostDTO response = new ResponsePostDTO(postService.update(new UpdatePostDTO(id, updateDTO.title(), updateDTO.body(), updateDTO.draft())));
+        ResponsePostDTO response = new ResponsePostDTO(postService.update(new UpdatePostDTO(id, updateDTO.userId(), updateDTO.title(), updateDTO.body(), updateDTO.draft())));
         return ResponseEntity.ok(response);
     }
     @DeleteMapping("/{id}")

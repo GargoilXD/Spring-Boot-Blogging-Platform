@@ -1,32 +1,54 @@
 package com.blog.Model;
 
+import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "users")
+@NoArgsConstructor
+@Setter
 @Getter
-@RequiredArgsConstructor
-public final class User {
-    private final Long id;
-    private final String username;
-    private final String passwordHash;
-    private final String fullName;
-    private final String email;
-    private final String gender;
-    private final String createdAt;
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    public static User fromResultSet(ResultSet resultSet) throws SQLException {
-        return new User(
-                resultSet.getLong("id"),
-                resultSet.getString("username"),
-                resultSet.getString("password"),
-                resultSet.getString("full_name"),
-                resultSet.getString("email"),
-                resultSet.getString("gender"),
-                resultSet.getString("created_at")
-        );
+    @Column(name = "username", nullable = false)
+    private String username;
+
+    @Column(name = "password", nullable = false)
+    private String passwordHash;
+
+    @Column(name = "full_name", nullable = false)
+    private String fullName;
+
+    @Column(name = "email", nullable = false)
+    private String email;
+
+    @Column(name = "gender", nullable = false)
+    private String gender;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    public User(Integer id, String username, String passwordHash, String fullName, String email, String gender) {
+        this.id = id;
+        this.username = username;
+        this.passwordHash = passwordHash;
+        this.fullName = fullName;
+        this.email = email;
+        this.gender = gender;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
     }
 
     public void validate() {

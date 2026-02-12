@@ -1,32 +1,48 @@
 package com.blog.Model;
 
+import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "posts")
+@NoArgsConstructor
+@Setter
 @Getter
-@RequiredArgsConstructor
-public final class Post {
-    private final Long id;
-    private final Long userId;
-    private final String username;
-    private final String title;
-    private final String body;
-    private final boolean draft;
-    private final LocalDateTime createdAt;
+public class Post {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    public static Post fromResultSet(ResultSet rs) throws SQLException {
-        return new Post(
-                rs.getLong("id"),
-                rs.getLong("user_id"),
-                rs.getString("username").trim(),
-                rs.getString("title").trim(),
-                rs.getString("body").trim(),
-                rs.getBoolean("is_draft"),
-                rs.getTimestamp("created_at").toLocalDateTime()
-        );
+    @Column(name = "user_id", nullable = false)
+    private Integer userId;
+
+    @Column(name = "title", nullable = false)
+    private String title;
+
+    @Column(name = "body", columnDefinition = "TEXT")
+    private String body;
+
+    @Column(name = "is_draft", nullable = false)
+    private boolean draft;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+    }
+    public Post(Integer id, Integer userId, String title, String body, boolean draft) {
+        this.id = id;
+        this.userId = userId;
+        this.title = title;
+        this.body = body;
+        this.draft = draft;
     }
 }

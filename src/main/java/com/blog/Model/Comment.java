@@ -20,10 +20,10 @@ public class Comment {
     private String id;
 
     @Field("userId")
-    private Long userId;
+    private Integer userId;
 
     @Field("postId")
-    private Long postId;
+    private Integer postId;
 
     @Field("username")
     private String username;
@@ -34,7 +34,7 @@ public class Comment {
     @Field("createdAt")
     private Instant createdAt;
 
-    public Comment(long userId, long postId, String username, String body) {
+    public Comment(Integer userId, Integer postId, String username, String body) {
         this.userId = userId;
         this.postId = postId;
         this.username = username;

@@ -1,6 +1,6 @@
 package com.blog.Service;
 
-import com.blog.DataAccessor.Interface.PostDataAccessor;
+import com.blog.Repository.PostRepository;
 import com.blog.DataTransporter.Post.CreatePostDTO;
 import com.blog.DataTransporter.Post.GetPostDTO;
 import com.blog.DataTransporter.Post.UpdatePostDTO;
@@ -27,7 +27,7 @@ import static org.mockito.Mockito.*;
 class PostServiceTest {
 
     @Mock
-    private PostDataAccessor dataAccessor;
+    private PostRepository dataAccessor;
 
     @InjectMocks
     private PostService postService;
@@ -40,13 +40,11 @@ class PostServiceTest {
     @BeforeEach
     void setUp() {
         testPost = new Post(
-                1L,
-                1L,
-                "johndoe",
+                1,
+                1,
                 "Test Post Title",
                 "Test post body content",
-                false,
-                LocalDateTime.now()
+                false
         );
 
         createPostDTO = new CreatePostDTO(

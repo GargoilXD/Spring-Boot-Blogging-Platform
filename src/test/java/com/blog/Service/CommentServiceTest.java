@@ -1,7 +1,7 @@
 package com.blog.Service;
 
 import com.blog.Exception.DataAccessException;
-import com.blog.DataAccessor.Interface.CommentDataAccessor;
+import com.blog.Repository.CommentRepository;
 import com.blog.DataTransporter.Comment.CreateCommentDTO;
 import com.blog.DataTransporter.Comment.UpdateCommentDTO;
 import com.blog.Model.Comment;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 class CommentServiceTest {
 
     @Mock
-    private CommentDataAccessor dataAccessor;
+    private CommentRepository dataAccessor;
 
     @InjectMocks
     private CommentService commentService;

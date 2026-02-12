@@ -12,13 +12,13 @@ public record UpdateCommentDTO(
     String id,
     @NotNull
     @Schema(description = "ID of the user who created the comment", example = "1", required = true)
-    Long userId,
+    Integer userId,
     @NotBlank
     @Schema(description = "Username of the commenter", example = "johndoe", required = true)
     String username,
     @NotNull
     @Schema(description = "ID of the post being commented on", example = "1", required = true)
-    Long postId,
+    Integer postId,
     @NotBlank
     @Schema(description = "Updated content of the comment", example = "Updated comment text...", required = true)
     String body

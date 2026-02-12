@@ -1,7 +1,7 @@
 package com.blog.Service;
 
 import com.blog.Exception.DataAccessException;
-import com.blog.DataAccessor.Interface.CommentDataAccessor;
+import com.blog.Repository.CommentRepository;
 import com.blog.DataTransporter.Comment.CreateCommentDTO;
 import com.blog.DataTransporter.Comment.UpdateCommentDTO;
 import com.blog.Model.Comment;
@@ -15,31 +15,32 @@ import org.springframework.cache.annotation.Caching;
 
 @Service
 public class CommentService {
-    CommentDataAccessor dataAccessor;
+    CommentRepository repository;
 
-    public CommentService(CommentDataAccessor dataAccessor) {
-        this.dataAccessor = dataAccessor;
+    public CommentService(CommentRepository repository) {
+        this.repository = repository;
     }
     @Cacheable(cacheNames = "commentsForPost", key = "#ID")
     public List<Comment> getForPost(long ID) throws DataAccessException {
-        return dataAccessor.getForPost(ID);
+        return repository.findByPostId(ID);
     }
     @Caching(evict = {
         @CacheEvict(cacheNames = "commentsForPost", key = "#dto.postId()")
     })
     public Comment save(CreateCommentDTO dto) throws DataAccessException {
-        return dataAccessor.save(dto);
+        return repository.save(dto.toEntity());
     }
     @Caching(evict = {
         @CacheEvict(cacheNames = "commentsForPost", key = "#dto.postId()")
     })
     public Comment update(UpdateCommentDTO dto) throws DataAccessException {
-        return dataAccessor.update(dto);
+        // Verify ID
+        return repository.save(dto.toEntity());
     }
     @Caching(evict = {
         @CacheEvict(cacheNames = "commentsForPost", allEntries = true)
     })
     public void delete(String ID) throws DataAccessException {
-        dataAccessor.delete(ID);
+        repository.deleteById(ID);
     }
 }

@@ -10,6 +10,7 @@ import com.blog.DataTransporter.User.RegisterUserDTO;
 import com.blog.Model.Comment;
 import com.blog.Model.Post;
 import com.blog.Service.*;
+import org.springframework.data.domain.Pageable;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
@@ -19,7 +20,7 @@ import org.springframework.stereotype.Controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Controller
+//@Controller
 public class GraphQLResolver {
     private final PostService postService;
     private final AuthenticationService authService;
@@ -38,8 +39,8 @@ public class GraphQLResolver {
         return postService.getPost(id).map(ResponsePostDTO::new).orElse(null);
     }
     @QueryMapping
-    public List<ResponsePostDTO> getAllPosts(@Argument Integer page, @Argument Integer size) {
-        return postService.getAllPosts(new GetPostDTO(page, size)).stream().map(ResponsePostDTO::new).collect(Collectors.toList());
+    public List<ResponsePostDTO> getAllPosts( Pageable pageable) {
+        return postService.getAllPosts(pageable).stream().map(ResponsePostDTO::new).collect(Collectors.toList());
     }
     @QueryMapping
     public List<String> getAllTags() {
@@ -59,11 +60,11 @@ public class GraphQLResolver {
         return new ResponsePostDTO(postService.save(input));
     }
     @MutationMapping
-    public ResponsePostDTO updatePost(@Argument Long id, @Argument("input") UpdatePostDTO input) {
-        return new ResponsePostDTO(postService.update(new UpdatePostDTO(id, input.title(), input.body(), input.draft())));
+    public ResponsePostDTO updatePost(@Argument Integer id, @Argument("input") UpdatePostDTO input) {
+        return new ResponsePostDTO(postService.update(new UpdatePostDTO(id, input.userId(), input.title(), input.body(), input.draft())));
     }
     @MutationMapping
-    public Boolean deletePost(@Argument Long id) {
+    public Boolean deletePost(@Argument Integer id) {
         postService.delete(id);
         return true;
     }
@@ -94,7 +95,7 @@ public class GraphQLResolver {
         return true;
     }
     @MutationMapping
-    public Boolean setPostTags(@Argument Long postID, @Argument List<String> tags) {
+    public Boolean setPostTags(@Argument Integer postID, @Argument List<String> tags) {
         tagService.setPostTags(postID, tags != null ? tags : List.of());
         return true;
     }

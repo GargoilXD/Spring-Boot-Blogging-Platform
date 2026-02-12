@@ -1,5 +1,6 @@
 package com.blog.DataTransporter.User;
 
+import com.blog.Model.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
@@ -21,6 +22,9 @@ public record RegisterUserDTO(
     @Schema(description = "Gender of the user", example = "Male", required = true)
     String gender
 ) {
+    public User toEntity() {
+        return new User(null, username, password, fullName, email, gender);
+    }
     public RegisterUserDTO withPasswordHash(String newPassword) {
         return new RegisterUserDTO(username, newPassword, fullName, email, gender);
     }
