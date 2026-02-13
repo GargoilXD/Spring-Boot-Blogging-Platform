@@ -58,7 +58,8 @@ class RestAuthenticationControllerTest {
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isAccepted());
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.message").value("User authenticated successfully"));
 
         verify(authService, times(1)).login("johndoe", "SecurePass123!");
     }
@@ -91,7 +92,8 @@ class RestAuthenticationControllerTest {
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isAccepted());
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.message").value("User authenticated successfully"));
 
         verify(authService, times(1)).login("john doe", "SecurePass123!");
     }
@@ -107,7 +109,8 @@ class RestAuthenticationControllerTest {
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerRequest)))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value("User registered successfully"));
 
         verify(authService, times(1)).register(any(RegisterUserDTO.class));
     }
@@ -123,7 +126,8 @@ class RestAuthenticationControllerTest {
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerRequest)))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value("User registered successfully"));
 
         verify(authService, times(1)).register(any(RegisterUserDTO.class));
     }
@@ -139,7 +143,8 @@ class RestAuthenticationControllerTest {
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerRequest)))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value("User registered successfully"));
 
         verify(authService, times(1)).register(any(RegisterUserDTO.class));
     }
@@ -192,7 +197,8 @@ class RestAuthenticationControllerTest {
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(registerRequest)))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value("User registered successfully"));
 
         verify(authService, times(1)).register(any(RegisterUserDTO.class));
     }
@@ -208,7 +214,8 @@ class RestAuthenticationControllerTest {
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isAccepted());
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.message").value("User authenticated successfully"));
 
         verify(authService, times(1)).login("user", "P@ssw0rd!#$%");
     }

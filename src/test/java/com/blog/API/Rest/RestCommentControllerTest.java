@@ -68,8 +68,9 @@ class RestCommentControllerTest {
         // Act & Assert
         mockMvc.perform(get("/api/comments/post/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].body").value("Great post!"));
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].body").value("Great post!"))
+                .andExpect(jsonPath("$.message").value("Comments retrieved successfully"));
 
         verify(commentService, times(1)).findByPostId(1);
     }
@@ -83,7 +84,8 @@ class RestCommentControllerTest {
         // Act & Assert
         mockMvc.perform(get("/api/comments/post/999"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.data.length()").value(0))
+                .andExpect(jsonPath("$.message").value("Comments retrieved successfully"));
 
         verify(commentService, times(1)).findByPostId(999);
     }
@@ -110,8 +112,9 @@ class RestCommentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createDTO)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.body").value("Great post!"));
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.body").value("Great post!"))
+                .andExpect(jsonPath("$.message").value("Comment created successfully"));
 
         verify(commentService, times(1)).save(any(CreateCommentDTO.class));
     }
@@ -131,13 +134,14 @@ class RestCommentControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createDTO)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.body").value(longBody));
+                .andExpect(jsonPath("$.data.body").value(longBody))
+                .andExpect(jsonPath("$.message").value("Comment created successfully"));
 
         verify(commentService, times(1)).save(any(CreateCommentDTO.class));
     }
 
     @Test
-    @DisplayName("PUT /api/comments/{id} - Should update comment successfully")
+    @DisplayName("PUT /api/comments - Should update comment successfully")
     void testUpdateComment() throws Exception {
         // Arrange
         UpdateCommentDTO updateDTO = new UpdateCommentDTO(1, 1, 1, "Updated comment");
@@ -146,24 +150,25 @@ class RestCommentControllerTest {
         when(commentService.update(any(UpdateCommentDTO.class))).thenReturn(updatedComment);
 
         // Act & Assert
-        mockMvc.perform(put("/api/comments/1")
+        mockMvc.perform(put("/api/comments")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(new UpdateCommentDTO(1, 1, 1, "Updated comment"))))
+                .content(objectMapper.writeValueAsString(updateDTO)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.body").value("Updated comment"));
+                .andExpect(jsonPath("$.data.body").value("Updated comment"))
+                .andExpect(jsonPath("$.message").value("Comment updated successfully"));
 
         verify(commentService, times(1)).update(any(UpdateCommentDTO.class));
     }
 
     @Test
-    @DisplayName("PUT /api/comments/{id} - Should return 404 when updating non-existent comment")
+    @DisplayName("PUT /api/comments - Should return 404 when updating non-existent comment")
     void testUpdateCommentNotFound() throws Exception {
         // Arrange
         doThrow(new EntityNotFoundException("Comment not found"))
                 .when(commentService).update(any(UpdateCommentDTO.class));
 
         // Act & Assert
-        mockMvc.perform(put("/api/comments/999")
+        mockMvc.perform(put("/api/comments")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(new UpdateCommentDTO(999, 1, 1, "Updated"))))
                 .andExpect(status().is4xxClientError());
@@ -179,7 +184,8 @@ class RestCommentControllerTest {
 
         // Act & Assert
         mockMvc.perform(delete("/api/comments/1"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Comment deleted successfully"));
 
         verify(commentService, times(1)).delete(1);
     }
@@ -199,6 +205,23 @@ class RestCommentControllerTest {
     }
 
     @Test
+    @DisplayName("POST /api/comments - Should return 404 when post or user not found")
+    void testCreateCommentPostOrUserNotFound() throws Exception {
+        // Arrange
+        CreateCommentDTO createDTO = new CreateCommentDTO(999, 999, "Test comment");
+        doThrow(new EntityNotFoundException("Post or user not found"))
+                .when(commentService).save(any(CreateCommentDTO.class));
+
+        // Act & Assert
+        mockMvc.perform(post("/api/comments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(createDTO)))
+                .andExpect(status().is4xxClientError());
+
+        verify(commentService, times(1)).save(any(CreateCommentDTO.class));
+    }
+
+    @Test
     @DisplayName("GET /api/comments/post/{postId} - Should retrieve multiple comments for popular post")
     void testGetMultipleCommentsForPost() throws Exception {
         // Arrange
@@ -214,9 +237,10 @@ class RestCommentControllerTest {
         // Act & Assert
         mockMvc.perform(get("/api/comments/post/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(5))
-                .andExpect(jsonPath("$[0].body").value("First comment"))
-                .andExpect(jsonPath("$[4].body").value("Fifth comment"));
+                .andExpect(jsonPath("$.data.length()").value(5))
+                .andExpect(jsonPath("$.data[0].body").value("First comment"))
+                .andExpect(jsonPath("$.data[4].body").value("Fifth comment"))
+                .andExpect(jsonPath("$.message").value("Comments retrieved successfully"));
 
         verify(commentService, times(1)).findByPostId(1);
     }

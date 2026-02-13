@@ -99,8 +99,9 @@ class RestTagControllerTest {
         // Act & Assert
         mockMvc.perform(get("/api/tags/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(3))
-                .andExpect(jsonPath("$[0]").value("Java"));
+                .andExpect(jsonPath("$.data.length()").value(3))
+                .andExpect(jsonPath("$.data[0]").value("Java"))
+                .andExpect(jsonPath("$.message").value("Tags retrieved successfully"));
 
         verify(tagService, times(1)).findByPostId(1);
     }
@@ -114,7 +115,8 @@ class RestTagControllerTest {
         // Act & Assert
         mockMvc.perform(get("/api/tags/999"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.data.length()").value(0))
+                .andExpect(jsonPath("$.message").value("Tags retrieved successfully"));
 
         verify(tagService, times(1)).findByPostId(999);
     }
@@ -138,7 +140,8 @@ class RestTagControllerTest {
         mockMvc.perform(post("/api/tags")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(tagsDTO)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value("Tags set successfully"));
 
         verify(tagService, times(1)).setPostTags(any(PostTagsDTO.class));
     }
@@ -154,7 +157,8 @@ class RestTagControllerTest {
         mockMvc.perform(post("/api/tags")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(tagsDTO)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value("Tags set successfully"));
 
         verify(tagService, times(1)).setPostTags(any(PostTagsDTO.class));
     }
@@ -170,7 +174,8 @@ class RestTagControllerTest {
         mockMvc.perform(put("/api/tags/add")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(tagsDTO)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Tags added successfully"));
 
         verify(tagService, times(1)).addTagsToPost(any(PostTagsDTO.class));
     }
@@ -203,7 +208,8 @@ class RestTagControllerTest {
         mockMvc.perform(put("/api/tags/remove")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(tagsDTO)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Tags removed successfully"));
 
         verify(tagService, times(1)).removeTagsFromPost(any(PostTagsDTO.class));
     }
@@ -219,7 +225,8 @@ class RestTagControllerTest {
         mockMvc.perform(put("/api/tags/remove")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(tagsDTO)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Tags removed successfully"));
 
         verify(tagService, times(1)).removeTagsFromPost(any(PostTagsDTO.class));
     }
@@ -249,7 +256,8 @@ class RestTagControllerTest {
 
         // Act & Assert
         mockMvc.perform(delete("/api/tags/1"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Tags deleted successfully"));
 
         verify(tagService, times(1)).deleteByPostId(1);
     }

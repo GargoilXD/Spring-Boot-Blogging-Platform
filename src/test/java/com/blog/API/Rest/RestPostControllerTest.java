@@ -68,8 +68,9 @@ class RestPostControllerTest {
         // Act & Assert
         mockMvc.perform(get("/api/posts/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.title").value("Test Post"));
+                .andExpect(jsonPath("$.data.postId").value(1))
+                .andExpect(jsonPath("$.data.title").value("Test Post"))
+                .andExpect(jsonPath("$.message").value("Post found and returned successfully"));
 
         verify(postService, times(1)).findById(1);
     }
@@ -137,8 +138,9 @@ class RestPostControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(postDTO)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.title").value("New Post"));
+                .andExpect(jsonPath("$.data.postId").value(1))
+                .andExpect(jsonPath("$.data.title").value("New Post"))
+                .andExpect(jsonPath("$.message").value("Post created successfully"));
 
         verify(postService, times(1)).save(any(CreatePostDTO.class));
     }
@@ -157,7 +159,8 @@ class RestPostControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(postDTO)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.draft").value(true));
+                .andExpect(jsonPath("$.data.draft").value(true))
+                .andExpect(jsonPath("$.message").value("Post created successfully"));
 
         verify(postService, times(1)).save(any(CreatePostDTO.class));
     }
@@ -176,7 +179,8 @@ class RestPostControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDTO)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title").value("Updated Post"));
+                .andExpect(jsonPath("$.data.title").value("Updated Post"))
+                .andExpect(jsonPath("$.message").value("Post updated successfully"));
 
         verify(postService, times(1)).update(any(UpdatePostDTO.class));
     }
@@ -195,7 +199,8 @@ class RestPostControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updateDTO)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.draft").value(true));
+                .andExpect(jsonPath("$.data.draft").value(true))
+                .andExpect(jsonPath("$.message").value("Post updated successfully"));
 
         verify(postService, times(1)).update(any(UpdatePostDTO.class));
     }
@@ -225,7 +230,8 @@ class RestPostControllerTest {
 
         // Act & Assert
         mockMvc.perform(delete("/api/posts/1"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("Post deleted successfully"));
 
         verify(postService, times(1)).delete(1);
     }
