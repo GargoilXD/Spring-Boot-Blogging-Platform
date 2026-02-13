@@ -1,19 +1,19 @@
 type Query {
-    getPostByID(id: ID!): Post
-    getAllPosts(page: Int, size: Int): [Post]
-    getAllTags: [String]
-    getTagsForPost(postID: ID!): [String]
-    getCommentsForPost(postID: ID!): [Comment]
+    findPostByID(id: ID!): Post
+    findAllPosts(page: Int, size: Int): [Post]
+    findAllTags(page: Int, size: Int): [String]
+    findTagsForPost(postID: ID!): [String]
+    findCommentsForPost(postID: ID!): [Comment]
 }
 
 type Mutation {
-    createPost(input: CreatePostInput!): Post
-    updatePost(id: ID!, input: UpdatePostInput!): Post
-    deletePost(id: ID!): Boolean
     login(username: String!, password: String!): Boolean
     register(input: RegisterInput!): Boolean
-    addComment(input: CommentInput!): Boolean
-    updateComment(id: ID!, body: String!): Boolean
+    createPost(input: CreatePostInput!): Post
+    updatePost(input: UpdatePostInput!): Post
+    deletePost(id: ID!): Boolean
+    addComment(input: CreateCommentInput!): Boolean
+    updateComment(input: UpdateCommentInput!): Boolean
     deleteComment(id: ID!): Boolean
     setPostTags(postID: ID!, postTags: [String!]!): Boolean
 }
@@ -34,19 +34,20 @@ type Comment {
     id: ID!
     userId: ID!
     postId: ID!
-    username: String!
     body: String!
     createdAt: String!
 }
 
 input CreatePostInput {
-    authorId: ID!
+    userId: ID!
     title: String!
     body: String!
     draft: Boolean
 }
 
 input UpdatePostInput {
+    userId: ID!
+    postId: ID!
     title: String
     body: String
     draft: Boolean
@@ -60,9 +61,14 @@ input RegisterInput {
     gender: String!
 }
 
-input CommentInput {
+input CreateCommentInput {
     userId: ID!
     postId: ID!
-    username: String!
+    body: String!
+}
+input UpdateCommentInput {
+    id: ID!
+    userId: ID!
+    postId: ID!
     body: String!
 }
