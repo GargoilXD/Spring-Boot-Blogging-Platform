@@ -6,20 +6,18 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-import java.time.LocalDateTime;
-
-@Schema(description = "Data for creating a new blog post")
+@Schema(description = "Data for creating a new blog post. All fields are required. The post will be assigned a unique ID and creation timestamp automatically.")
 public record CreatePostDTO(
-    @Schema(description = "ID of the post author", example = "1")
+    @Schema(description = "ID of the post author. Must reference an existing user in the system.", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "User ID is required") @Min(1)
     Integer userId,
-    @Schema(description = "Title of the blog post", example = "My First Blog Post")
+    @Schema(description = "Title of the blog post. Will be trimmed. Should be concise and descriptive.", example = "Getting Started with Spring Boot", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Title is required")
     String title,
-    @Schema(description = "Content body of the blog post", example = "This is the content of my first blog post...")
+    @Schema(description = "Content body of the blog post. Can include markdown or plain text. Will be trimmed.", example = "This is the content of my first blog post...", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Body is required")
     String body,
-    @Schema(description = "Whether the post is a draft", example = "false")
+    @Schema(description = "Whether the post is a draft. Draft posts are not visible to the public.", example = "false", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "Draft status is required")
     Boolean draft
 ) {

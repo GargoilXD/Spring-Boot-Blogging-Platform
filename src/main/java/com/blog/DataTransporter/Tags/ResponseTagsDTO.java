@@ -6,12 +6,12 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
-@Schema(description = "Response data for a tags")
+@Schema(description = "Response data for tags associated with a post. Contains the post ID and its assigned tags.")
 public record ResponseTagsDTO(
-        @Schema(description = "ID of the post to update", example = "1")
+        @Schema(description = "ID of the post. References the blog post.", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull
         Integer PostID,
-        @Schema(description = "Tags for the post", example = "['tag1', 'tag2']")
+        @Schema(description = "List of tags for the post. Tags are used for categorization and organization.", example = "[\"technology\", \"spring-boot\", \"tutorial\"]", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull(message = "Tags are required")
         List<String> tags
 ) {

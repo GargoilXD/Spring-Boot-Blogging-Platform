@@ -8,11 +8,12 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
+@Schema(description = "Data for managing tags on a post. Used for setting, adding, or removing tags from a blog post.")
 public record PostTagsDTO(
-        @Schema(description = "ID of the post to update", example = "1")
+        @Schema(description = "ID of the post to update. Must reference an existing post.", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull(message = "Post ID is required") @Min(1)
         Integer postId,
-        @Schema(description = "Tags for the post", example = "['tag1', 'tag2']")
+        @Schema(description = "List of tags for the post. Tags will be trimmed. Empty list is not allowed.", example = "[\"technology\", \"spring-boot\", \"tutorial\"]", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotEmpty(message = "Tags are required")
         List<String> tags
 ) {

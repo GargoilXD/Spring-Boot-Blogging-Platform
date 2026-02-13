@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@Tag(name = "Authentication", description = "Authentication management APIs for user login and registration")
+@Tag(name = "Authentication", description = "Authentication management APIs for user registration, login, and session management")
 public class RestAuthenticationController {
     private final AuthenticationService authService;
 
@@ -28,21 +28,27 @@ public class RestAuthenticationController {
     @PostMapping("/login")
     @Operation(
         summary = "Authenticate user",
-        description = "Authenticates a user with username and password credentials"
+        description = "Authenticates a user with username and password credentials. Returns a success response upon successful authentication.",
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "User login credentials",
+            required = true,
+            content = @Content(schema = @Schema(implementation = LoginUserDTO.class))
+        )
     )
     @ApiResponses(value = {
         @ApiResponse(
             responseCode = "202",
-            description = "User authenticated successfully"
+            description = "User authenticated successfully",
+            content = @Content(schema = @Schema(implementation = SuccessResponse.class))
         ),
         @ApiResponse(
             responseCode = "401",
-            description = "Invalid credentials",
+            description = "Invalid credentials - username or password is incorrect",
             content = @Content(schema = @Schema(implementation = String.class))
         ),
         @ApiResponse(
             responseCode = "400",
-            description = "Invalid request body",
+            description = "Invalid request body - missing or malformed fields",
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
@@ -53,21 +59,27 @@ public class RestAuthenticationController {
     @PostMapping("/register")
     @Operation(
         summary = "Register new user",
-        description = "Creates a new user account with the provided registration details"
+        description = "Creates a new user account with the provided registration details. Password will be hashed before storage.",
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "User registration information",
+            required = true,
+            content = @Content(schema = @Schema(implementation = RegisterUserDTO.class))
+        )
     )
     @ApiResponses(value = {
         @ApiResponse(
             responseCode = "201",
-            description = "User registered successfully"
+            description = "User registered successfully",
+            content = @Content(schema = @Schema(implementation = SuccessResponse.class))
         ),
         @ApiResponse(
             responseCode = "409",
-            description = "User already exists",
+            description = "User already exists - username or email is already registered",
             content = @Content(schema = @Schema(implementation = String.class))
         ),
         @ApiResponse(
             responseCode = "400",
-            description = "Invalid registration data",
+            description = "Invalid registration data - validation errors in request body",
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
