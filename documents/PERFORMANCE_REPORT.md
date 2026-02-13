@@ -21,7 +21,7 @@ This performance report provides a comprehensive analysis of the Spring Boot Blo
 | `DELETE /api/posts/{id}` | Delete post | 90ms | 130ms | 180ms |
 | `GET /api/comments/post/{postId}` | Get comments | 60ms | 95ms | 140ms |
 | `POST /api/comments` | Create comment | 100ms | 150ms | 200ms |
-| `GET /api/tags` | Get all tags | 55ms | 85ms | 120ms |
+| `GET /api/postTags` | Get all postTags | 55ms | 85ms | 120ms |
 | `POST /api/auth/register` | Register user | 250ms | 350ms | 450ms |
 | `POST /api/auth/login` | Authenticate user | 200ms | 300ms | 400ms |
 

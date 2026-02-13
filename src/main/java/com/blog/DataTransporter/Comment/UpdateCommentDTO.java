@@ -2,31 +2,32 @@ package com.blog.DataTransporter.Comment;
 
 import com.blog.Model.Comment;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-@Schema(description = "Data for updating an existing comment")
+@Schema(description = "Data for updating an existing comment. All fields are required. The comment ID must exist in the system.")
 public record UpdateCommentDTO(
-    @NotNull
-    @Schema(description = "ID of the comment to update", example = "507f1f77bcf86cd799439011", required = true)
-    String id,
-    @NotNull
-    @Schema(description = "ID of the user who created the comment", example = "1", required = true)
-    Long userId,
-    @NotBlank
-    @Schema(description = "Username of the commenter", example = "johndoe", required = true)
-    String username,
-    @NotNull
-    @Schema(description = "ID of the post being commented on", example = "1", required = true)
-    Long postId,
-    @NotBlank
-    @Schema(description = "Updated content of the comment", example = "Updated comment text...", required = true)
+    @Schema(description = "ID of the comment to update. Must reference an existing comment.", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "Comment ID is required") @Min(1)
+    Integer id,
+    @Schema(description = "ID of the user who created the comment. Must match the original comment author.", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "User ID is required") @Min(1)
+    Integer userId,
+    @Schema(description = "ID of the post being commented on. Must match the original post.", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "Post ID is required") @Min(1)
+    Integer postId,
+    @Schema(description = "Updated content of the comment. Will be trimmed.", example = "Updated comment text with corrections...", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotBlank(message = "Comment body is required")
     String body
 ) {
+    public UpdateCommentDTO {
+        body = body.trim();
+    }
     public UpdateCommentDTO(Comment comment) {
-        this(comment.getId(), comment.getUserId(), comment.getUsername(), comment.getPostId(), comment.getBody());
+        this(comment.getId(), comment.getUserId(), comment.getPostId(), comment.getBody());
     }
     public Comment toEntity() {
-        return new Comment(id, userId, postId, username, body, null);
+        return new Comment(id, userId, postId, body, null);
     }
 }

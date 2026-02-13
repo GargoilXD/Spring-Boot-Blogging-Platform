@@ -1,8 +1,9 @@
 package com.blog.ExceptionHandler;
 
-import com.blog.Exception.DataAccessException;
+import com.blog.API.Response.ErrorResponse;
 import com.blog.Exception.AuthenticationException;
-import com.blog.Exception.UserAlreadyExistsException;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,12 +30,17 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> handleAuthentication(AuthenticationException e) {
         log.warn("Authentication failed: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse("AUTH_FAILED", "Invalid credentials"));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
     }
-    @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleUserExists(UserAlreadyExistsException e) {
-        log.warn("Registration failed - user exists: {}", e.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse("USER_EXISTS", "Username already exists"));
+    @ExceptionHandler(EntityExistsException.class)
+    public ResponseEntity<ErrorResponse> handleEntityExists(EntityExistsException e) {
+        log.warn("Entity already exists: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(HttpStatus.CONFLICT, e.getMessage()));
+    }
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleEntityNotFound(EntityNotFoundException e) {
+        log.warn("Entity not found: {}", e.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(HttpStatus.NOT_FOUND, e.getMessage()));
     }
 
     @Override
@@ -46,34 +52,28 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
             errors.put(fieldName, message);
         });
         log.warn("Validation failed: {}", errors);
-        return ResponseEntity.badRequest().body(new ErrorResponse("VALIDATION_FAILED", errors));
+        return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.BAD_REQUEST, String.join(", ", errors.values())));
     }
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException e) {
         log.warn("Constraint violation: {}", e.getMessage());
-        return ResponseEntity.badRequest().body(new ErrorResponse("VALIDATION_FAILED", "Invalid input parameters"));
+        return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.BAD_REQUEST, "Invalid input parameters"));
     }
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
         log.warn("Illegal argument: {}", ex.getMessage());
-        return ResponseEntity.badRequest().body(new ErrorResponse("INVALID_ARGUMENT", ex.getMessage()));
-    }
-
-    @ExceptionHandler(DataAccessException.class)
-    public ResponseEntity<ErrorResponse> handleDataAccess(DataAccessException ex) {
-        log.error("Database error", ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("DATABASE_ERROR", "A database error occurred"));
+        return ResponseEntity.badRequest().body(new ErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage()));
     }
 
     @ExceptionHandler(ResourceAccessException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceAccessException ex) {
         log.debug("Resource not found: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse("NOT_FOUND", ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpected(Exception e) {
         log.error("Unexpected error", e);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse("SERVER_ERROR", "An unexpected error occurred"));
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred"));
     }
 }

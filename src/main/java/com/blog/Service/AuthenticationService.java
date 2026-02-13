@@ -1,29 +1,28 @@
 package com.blog.Service;
 
-import com.blog.DataAccessor.Interface.UserDataAccessor;
+import com.blog.Repository.UserRepository;
 import com.blog.DataTransporter.User.RegisterUserDTO;
 import com.blog.Model.User;
 import com.blog.Exception.AuthenticationException;
-import com.blog.Exception.UserAlreadyExistsException;
 import com.blog.Utility.PasswordHasher;
+import jakarta.persistence.EntityExistsException;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthenticationService {
-    private final UserDataAccessor dataAccessor;
+    private final UserRepository repository;
     private final PasswordHasher passwordHasher;
 
-    public AuthenticationService(UserDataAccessor dataAccessor, PasswordHasher passwordHasher) {
-        this.dataAccessor = dataAccessor;
+    public AuthenticationService(UserRepository repository, PasswordHasher passwordHasher) {
+        this.repository = repository;
         this.passwordHasher = passwordHasher;
     }
-    public void authenticate(String username, String password) {
-        User user = dataAccessor.getByUsername(username.trim()).orElseThrow(() -> new AuthenticationException("Invalid credentials"));
+    public void login(String username, String password) {
+        User user = repository.findByUsername(username.trim()).orElseThrow(() -> new AuthenticationException("Invalid credentials"));
         if (!passwordHasher.verifyPassword(password, user.getPasswordHash())) throw new AuthenticationException("Invalid credentials");
     }
-    public void register(RegisterUserDTO dto) {
-        dto.validate();
-        if (dataAccessor.getByUsername(dto.username().trim()).isPresent()) throw new UserAlreadyExistsException("Username already exists: " + dto.username());
-        dataAccessor.register(dto.withPasswordHash(passwordHasher.hashPassword(dto.password())));
+    public void register(RegisterUserDTO DTO) {
+        if (repository.findByUsername(DTO.username().trim()).isPresent()) throw new EntityExistsException("Username already exists: " + DTO.username());
+        repository.save(DTO.withPasswordHash(passwordHasher.hashPassword(DTO.password())).toEntity());
     }
 }

@@ -3,21 +3,22 @@ package com.blog.API.GraphQL;
 import com.blog.DataTransporter.Comment.CreateCommentDTO;
 import com.blog.DataTransporter.Comment.UpdateCommentDTO;
 import com.blog.DataTransporter.Post.CreatePostDTO;
-import com.blog.DataTransporter.Post.GetPostDTO;
-import com.blog.DataTransporter.Post.ResponsePostDTO;
 import com.blog.DataTransporter.Post.UpdatePostDTO;
+import com.blog.DataTransporter.Tags.PostTagsDTO;
 import com.blog.DataTransporter.User.RegisterUserDTO;
 import com.blog.Model.Comment;
 import com.blog.Model.Post;
 import com.blog.Service.*;
+import jakarta.validation.constraints.NotNull;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.stereotype.Controller;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller
 public class GraphQLResolver {
@@ -34,78 +35,97 @@ public class GraphQLResolver {
     }
 
     @QueryMapping
-    public ResponsePostDTO getPostByID(@Argument Long id) {
-        return postService.getPost(id).map(ResponsePostDTO::new).orElse(null);
+    public Post findPostByID(@Argument @NotNull Integer id) {
+        return postService.findById(id).orElse(null);
     }
     @QueryMapping
-    public List<ResponsePostDTO> getAllPosts(@Argument Integer page, @Argument Integer size) {
-        return postService.getAllPosts(new GetPostDTO(page, size)).stream().map(ResponsePostDTO::new).collect(Collectors.toList());
+    public List<Post> findAllPosts(@Argument Integer page, @Argument Integer size) {
+        if (page == null) page = 0;
+        if (size == null) size = 5;
+        return postService.findAll(PageRequest.of(page, size)).toList();
     }
     @QueryMapping
-    public List<String> getAllTags() {
-        return tagService.getAllTags();
+    public List<String> findAllTags(@Argument Integer page, @Argument Integer size) {
+        if (page == null) page = 0;
+        if (size == null) size = 5;
+        List<String> allTags = new ArrayList<>();
+        tagService.findAll(PageRequest.of(page, size)).forEach(tags -> allTags.addAll(tags.getTags()));
+        return allTags;
     }
     @QueryMapping
-    public List<String> getTagsForPost(@Argument Long postID) {
-        return tagService.getTagsForPost(postID);
+    public List<String> findTagsForPost(@Argument @NotNull Integer postID) {
+        return tagService.findByPostId(postID);
     }
     @QueryMapping
-    public List<Comment> getCommentsForPost(@Argument Long postID) {
-        return commentService.getForPost(postID);
+    public List<Comment> findCommentsForPost(@Argument @NotNull Integer postID) {
+        return commentService.findByPostId(postID);
     }
-
+    // Mutation Mappings
     @MutationMapping
-    public ResponsePostDTO createPost(@Argument("input") CreatePostDTO input) {
-        return new ResponsePostDTO(postService.save(input));
+    public Boolean login(@Argument @NotNull String username, @Argument @NotNull String password) {
+        authService.login(username.trim(), password);
+        return true;
     }
     @MutationMapping
-    public ResponsePostDTO updatePost(@Argument Long id, @Argument("input") UpdatePostDTO input) {
-        return new ResponsePostDTO(postService.update(new UpdatePostDTO(id, input.title(), input.body(), input.draft())));
+    public Boolean register(@Argument("input") @NotNull RegisterUserDTO input) {
+        authService.register(input);
+        return true;
     }
     @MutationMapping
-    public Boolean deletePost(@Argument Long id) {
+    public Post createPost(@Argument("input") @NotNull CreatePostDTO input) {
+        return postService.save(input);
+    }
+    @MutationMapping
+    public Post updatePost(@Argument("input") @NotNull UpdatePostDTO input) {
+        return postService.update(input);
+    }
+    @MutationMapping
+    public Boolean deletePost(@Argument @NotNull Integer id) {
         postService.delete(id);
         return true;
     }
+
     @MutationMapping
-    public Boolean login(@Argument String username, @Argument String password) {
-        authService.authenticate(username.trim(), password);
-        return true;
-    }
-    @MutationMapping
-    public Boolean register(@Argument("input") RegisterUserDTO input) {
-        authService.register(input);
-        return true;
-        
-    }
-    @MutationMapping
-    public Boolean addComment(@Argument("input") CreateCommentDTO input) {
+    public Boolean addComment(@Argument("input") @NotNull CreateCommentDTO input) {
         commentService.save(input);
         return true;
     }
     @MutationMapping
-    public Boolean updateComment(@Argument String id, @Argument String body) {
-        commentService.update(new UpdateCommentDTO(id, null, id, null, body));
+    public Boolean updateComment(@Argument("input") @NotNull UpdateCommentDTO input) {
+        commentService.update(input);
         return true;
     }
     @MutationMapping
-    public Boolean deleteComment(@Argument String id) {
+    public Boolean deleteComment(@Argument @NotNull Integer id) {
         commentService.delete(id);
         return true;
     }
     @MutationMapping
-    public Boolean setPostTags(@Argument Long postID, @Argument List<String> tags) {
-        tagService.setPostTags(postID, tags != null ? tags : List.of());
+    public Boolean setPostTags(@Argument @NotNull Integer postID, @Argument @NotNull List<String> tags) {
+        tagService.setPostTags(new PostTagsDTO(postID, tags));
         return true;
     }
-    
+    @MutationMapping
+    public Boolean addTagsToPost(@Argument @NotNull Integer postID, @Argument @NotNull List<String> tags) {
+        tagService.addTagsToPost(new PostTagsDTO(postID, tags));
+        return true;
+    }
+    @MutationMapping
+    public Boolean removeTagsFromPost(@Argument @NotNull Integer postID, @Argument @NotNull List<String> tags) {
+        tagService.removeTagsFromPost(new PostTagsDTO(postID, tags));
+        return true;
+    }
+    @MutationMapping
+    public Boolean deleteByPostId(@Argument @NotNull Integer postID) {
+        tagService.deleteByPostId(postID);
+        return true;
+    }
     @SchemaMapping(typeName = "Post", field = "tags")
     public List<String> getTags(Post post) {
-        return tagService.getTagsForPost(post.getId());
+        return tagService.findByPostId(post.getId());
     }
-    
     @SchemaMapping(typeName = "Post", field = "comments")
     public List<Comment> getComments(Post post) {
-        return commentService.getForPost(post.getId());
+        return commentService.findByPostId(post.getId());
     }
 }

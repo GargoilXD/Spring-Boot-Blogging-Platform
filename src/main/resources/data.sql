@@ -25,3 +25,26 @@ INSERT INTO posts (user_id, title, body, is_draft) VALUES
 (6, 'Rainy Day Comfort: My Go-To Soup', 'Chop onions, carrots, and celery. Sauté in olive oil until soft. Add diced tomatoes, vegetable broth, and a can of white beans. Simmer for 20 minutes. Finish with chopped kale and a squeeze of lemon. This soup costs less than $5, feeds four, and tastes like a hug. Perfect for gray afternoons when you need warmth from the inside out.', false),
 (7, 'Finding Focus in a Distracted World', 'Deep work is a superpower. To cultivate it, I block 90-minute focus sessions in my calendar. During these, my phone is in another room, email is closed, and I work on one meaningful task. It''s not easy—but the output in those 90 minutes often exceeds a full day of fragmented work. Protect your attention fiercely; it''s your most valuable resource.', false)
 ON CONFLICT DO NOTHING;
+
+INSERT INTO comments (user_id, post_id, body, created_at) VALUES
+(1, 1, 'Great tip! I''ve been using this for a week and it really helps.', '2026-01-25 14:30:00'),
+(2, 1, 'Does this work for bigger tasks too?', '2026-01-26 09:15:00'),
+(1, 2, 'Love this recipe! Added some mushrooms and it turned out amazing.', '2026-01-27 18:45:00'),
+(2, 3, 'Interesting perspective on AI collaboration.', '2026-01-28 11:20:00'),
+(2, 4, 'I need to try this digital detox!', '2026-01-29 16:10:00'),
+(1, 5, 'Found my own bench yesterday. Thanks for the inspiration!', '2026-01-30 08:55:00'),
+(1, 6, 'This resonates so much! I''ve been trying to build a consistent morning routine too.', '2026-01-31 07:40:00'),
+(2, 6, 'Do you use a journal? What kind?', '2026-02-01 13:25:00'),
+(3, 7, 'I did a similar social media detox last year. Life-changing!', '2026-02-02 19:50:00'),
+(4, 8, 'So true about saying no. It''s liberating once you get past the guilt.', '2026-02-03 10:05:00'),
+(5, 9, 'Your plantain recipe sounds delicious! Do you use overripe plantains?', '2026-02-04 15:30:00'),
+(6, 10, 'I walk daily now—best decision ever for mental clarity.', '2026-02-05 12:15:00'),
+(7, 11, 'The "messy middle" is real. Thanks for naming it!', '2026-02-06 17:40:00'),
+(1, 12, 'Digital minimalism changed my life too. Started with turning off notifications.', '2026-02-07 09:20:00'),
+(2, 13, 'Asking for help is hard but so necessary. Great reminder!', '2026-02-08 14:55:00'),
+(3, 14, 'Made your soup last night—perfect for the rainy weather!', '2026-02-09 20:10:00'),
+(4, 15, 'I struggle with deep work. Any tips for avoiding the urge to check email?', '2026-02-10 06:30:00'),
+(5, 2, 'Tried your pasta recipe—added mushrooms like you suggested. Amazing!', '2026-02-10 07:00:00'),
+(6, 4, 'Did your screen-free hour become a daily habit?', '2026-02-10 07:05:00'),
+(7, 1, 'The 5-minute rule saved my productivity this week. Thank you!', '2026-02-10 07:08:00')
+ON CONFLICT DO NOTHING;

@@ -1,51 +1,40 @@
 package com.blog.Model;
 
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.AllArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 
-@Setter
-@Getter
+@Entity
+@Table(name = "comments")
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "comments")
+@Setter
+@Getter
 public class Comment {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    @Field("userId")
-    private Long userId;
+    @Column(name = "user_id", nullable = false)
+    private Integer userId;
 
-    @Field("postId")
-    private Long postId;
+    @Column(name = "post_id", nullable = false)
+    private Integer postId;
 
-    @Field("username")
-    private String username;
-
-    @Field("body")
+    @Column(name = "body", columnDefinition = "TEXT", nullable = false)
     private String body;
 
-    @Field("createdAt")
-    private Instant createdAt;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    public Comment(long userId, long postId, String username, String body) {
-        this.userId = userId;
-        this.postId = postId;
-        this.username = username;
-        this.body = body;
-        this.createdAt = Instant.now();
-        validate();
-    }
-
-    public void validate() {
-        if (userId <= 0 || postId <= 0 || username == null || username.isEmpty() || body == null || body.isEmpty()) {
-            throw new IllegalArgumentException("Invalid comment data");
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
         }
     }
 }
