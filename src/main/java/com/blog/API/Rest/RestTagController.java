@@ -1,21 +1,26 @@
 package com.blog.API.Rest;
 
+import com.blog.DataTransporter.Tags.PostTagsDTO;
+import com.blog.DataTransporter.Tags.ResponseTagsDTO;
 import com.blog.Service.TagService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.*;
 
-//@RestController
-//@RequestMapping("api/tags")
-//@Tag(name = "Tags", description = "Tag management APIs for managing blog post tags and categories")
+@RestController
+@RequestMapping("api/tags")
+@Tag(name = "Tags", description = "Tag management APIs for managing blog post tags and categories")
 public class RestTagController {
     private final TagService tagService;
     
@@ -34,65 +39,31 @@ public class RestTagController {
             content = @Content(schema = @Schema(implementation = List.class))
         )
     })
-    public ResponseEntity<List<String>> getAllTags() {
-        List<String> tags = tagService.getAllTags();
-        return ResponseEntity.ok(tags);
+    public ResponseEntity<Page<ResponseTagsDTO>> findAll(Pageable pageable) {
+        return ResponseEntity.ok(tagService.findAll(pageable).map(ResponseTagsDTO::new));
     }
-
-    @GetMapping("/post/{postId}")
-    @Operation(
-        summary = "Get tags for a post",
-        description = "Retrieves all tags associated with a specific blog post"
-    )
-    @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Tags retrieved successfully",
-            content = @Content(schema = @Schema(implementation = List.class))
-        ),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Post not found",
-            content = @Content(schema = @Schema(implementation = String.class))
-        )
-    })
-    public ResponseEntity<List<String>> getTagsForPost(
-        @Parameter(description = "ID of the post to retrieve tags for", required = true, example = "1")
-        @PathVariable Long postId
-    ) {
-        return ResponseEntity.ok(tagService.getTagsForPost(postId));
+    @GetMapping("/{postId}")
+    public ResponseEntity<List<String>> findByPostId(@PathVariable @Min(1) Integer postId) {
+        return ResponseEntity.ok(tagService.findByPostId(postId));
     }
-    @PostMapping("/post/{postId}")
-    @Operation(
-        summary = "Set tags for a post",
-        description = "Sets or updates the tags associated with a specific blog post"
-    )
-    @ApiResponses(value = {
-        @ApiResponse(
-            responseCode = "200",
-            description = "Tags set successfully"
-        ),
-        @ApiResponse(
-            responseCode = "404",
-            description = "Post not found",
-            content = @Content(schema = @Schema(implementation = String.class))
-        ),
-        @ApiResponse(
-            responseCode = "400",
-            description = "Invalid tag data",
-            content = @Content(schema = @Schema(implementation = String.class))
-        )
-    })
-    public ResponseEntity<Void> setPostTags(
-        @Parameter(description = "ID of the post to set tags for", required = true, example = "1")
-        @PathVariable Long postId,
-        @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "List of tag names to associate with the post",
-            required = true
-        )
-        @RequestBody List<String> tags
-    ) {
-        tagService.setPostTags(postId, tags);
+    @PostMapping
+    public ResponseEntity<Void> setPostTags(@Valid @RequestBody PostTagsDTO DTO) {
+        tagService.setPostTags(DTO);
+        return ResponseEntity.ok().build();
+    }
+    @PutMapping("/add")
+    public ResponseEntity<Void> addTagsToPost(@Valid @RequestBody PostTagsDTO DTO) {
+        tagService.addTagsToPost(DTO);
+        return ResponseEntity.ok().build();
+    }
+    @PutMapping("/remove")
+    public ResponseEntity<Void> removeTagsFromPost(@Valid @RequestBody PostTagsDTO DTO) {
+        tagService.removeTagsFromPost(DTO);
+        return ResponseEntity.ok().build();
+    }
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<Void> deleteByPostId(@PathVariable @Min(1) int postId) {
+        tagService.deleteByPostId(postId);
         return ResponseEntity.ok().build();
     }
 }

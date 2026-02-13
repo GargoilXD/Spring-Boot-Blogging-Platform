@@ -46,7 +46,7 @@ public class RestAuthenticationController {
         )
     })
     public ResponseEntity<Void> login(@RequestBody LoginUserDTO request) {
-        authService.authenticate(request.username(), request.password());
+        authService.login(request.username(), request.password());
         return ResponseEntity.status(HttpStatus.ACCEPTED).build();
     }
     @PostMapping("/register")

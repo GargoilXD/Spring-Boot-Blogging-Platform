@@ -1,48 +1,58 @@
 package com.blog.Service;
 
-import com.blog.Exception.DataAccessException;
+import com.blog.DataTransporter.Tags.PostTagsDTO;
+import com.blog.Model.PostTags;
 import com.blog.Repository.TagRepository;
 
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Caching;
 
-//@Service
+@Service
 public class TagService {
     TagRepository repository;
 
     public TagService(TagRepository repository) {
         this.repository = repository;
     }
-    @Cacheable(cacheNames = "tags")
-    public List<String> getAllTags() throws DataAccessException {
-        return repository.getAllTags();
+    @Cacheable(cacheNames = "PostTags.findAll", key = "{#pageable.pageNumber, #pageable.pageSize}")
+    public Page<PostTags> findAll(Pageable pageable) {
+        return repository.findAll(pageable);
     }
-    @Cacheable(cacheNames = "tagsByPosts")
-    public HashMap<Long, List<String>> getAllTagsByPosts() throws DataAccessException {
-        return new HashMap<>();//repository.findAllById();
+    @Cacheable(cacheNames = "PostTags.findByPostId", key = "#postId")
+    public List<String> findByPostId(int postId) {
+        return repository.findByPostId(postId).map(PostTags::getTags).orElse(Collections.emptyList());
     }
-    @Cacheable(cacheNames = "tagsForPost", key = "#ID")
-    public List<String> getForPost(long ID) throws DataAccessException {
-        throw new UnsupportedOperationException("getForPost");
-//        return repository.getTagsForPost(ID);
+    @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#DTO.postId")
+    public void setPostTags(PostTagsDTO DTO) {
+        repository.save(DTO.toEntity());
     }
-    @Cacheable(cacheNames = "tagsForPost", key = "#PostID")
-    public List<String> getTagsForPost(long PostID) throws DataAccessException {
-        throw new UnsupportedOperationException("getForPost");
-//        return repository.getTagsForPost(PostID);
+    @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#DTO.postId")
+    public void addTagsToPost(PostTagsDTO DTO) {
+        PostTags existing = repository.findByPostId(DTO.postId()).orElseThrow(() -> new EntityNotFoundException("Failed to Add Tags For Post:" + DTO.postId()));
+        Set<String> currentTags = new HashSet<>(existing.getTags());
+        currentTags.addAll(DTO.tags());
+        existing.setTags(new ArrayList<>(currentTags));
+        repository.save(existing);
     }
-    @Caching(evict = {
-        @CacheEvict(cacheNames = "tagsForPost", key = "#PostID"),
-        @CacheEvict(cacheNames = "tagsByPosts", allEntries = true),
-        @CacheEvict(cacheNames = "tags", allEntries = true)
-    })
-    public void setPostTags(long PostID, List<String> tags) throws DataAccessException {
-        throw new UnsupportedOperationException("getForPost");
-//        repository.setPostTags(PostID, tags);
+    @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#DTO.postId")
+    public void removeTagsFromPost(PostTagsDTO DTO) {
+        PostTags existing = repository.findByPostId(DTO.postId()).orElseThrow(() -> new EntityNotFoundException("Failed to Remove Tags For Post:" + DTO.postId()));
+        Set<String> currentTags = new HashSet<>(existing.getTags());
+        DTO.tags().forEach(currentTags::remove);
+        if (currentTags.isEmpty()) repository.delete(existing);
+        else {
+            existing.setTags(new ArrayList<>(currentTags));
+            repository.save(existing);
+        }
+    }
+    public void deleteByPostId(int postId) {
+        repository.findByPostId(postId).orElseThrow(() -> new EntityNotFoundException("Failed to Delete All Tags For Post:" + postId));
+        repository.deleteByPostId(postId);
     }
 }

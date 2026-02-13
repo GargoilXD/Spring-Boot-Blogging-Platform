@@ -1,13 +1,11 @@
 package com.blog.Repository;
 
+import com.blog.Model.PostTags;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-import java.util.HashMap;
-import java.util.List;
+import java.util.Optional;
 
-public interface TagRepository {// extends MongoRepository<String, String> {
-    List<String> getAllTags();
-    HashMap<Long, List<String>> getAllTagsByPosts();
-    List<String> getTagsForPost(long PostID);
-    void setPostTags(long postID, List<String> tags);
+public interface TagRepository extends MongoRepository<PostTags, String> {
+    Optional<PostTags> findByPostId(int postId);
+    void deleteByPostId(int postId);
 }

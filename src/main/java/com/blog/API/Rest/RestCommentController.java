@@ -54,9 +54,9 @@ public class RestCommentController {
     })
     public ResponseEntity<List<ResponseCommentDTO>> getCommentsForPost(
         @Parameter(description = "ID of the post to retrieve comments for", required = true, example = "1")
-        @PathVariable @Min(1) Long postId
+        @PathVariable @Min(1) Integer postId
     ) {
-        return ResponseEntity.ok(commentService.getForPost(postId).stream().map(ResponseCommentDTO::new).toList());
+        return ResponseEntity.ok(commentService.findByPostId(postId).stream().map(ResponseCommentDTO::new).toList());
     }
     @PostMapping
     @Operation(
@@ -107,10 +107,10 @@ public class RestCommentController {
     })
     public ResponseEntity<ResponseCommentDTO> updateComment(
         @Parameter(description = "ID of the comment to update", required = true, example = "507f1f77bcf86cd799439011")
-        @PathVariable String id,
+        @PathVariable Integer id,
         @Valid @RequestBody UpdateCommentDTO dto
     ) {
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseCommentDTO(commentService.update(new UpdateCommentDTO(id, dto.userId(), dto.username(), dto.postId(), dto.body()))));
+        return ResponseEntity.status(HttpStatus.OK).body(new ResponseCommentDTO(commentService.update(new UpdateCommentDTO(id, dto.userId(), dto.postId(), dto.body()))));
     }
     @DeleteMapping("/{id}")
     @Operation(
@@ -130,7 +130,7 @@ public class RestCommentController {
     })
     public ResponseEntity<Void> deleteComment(
         @Parameter(description = "ID of the comment to delete", required = true, example = "507f1f77bcf86cd799439011")
-        @PathVariable String id
+        @PathVariable Integer id
     ) {
         commentService.delete(id);
         return ResponseEntity.noContent().build();

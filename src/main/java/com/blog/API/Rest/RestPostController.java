@@ -1,10 +1,8 @@
 package com.blog.API.Rest;
 
 import com.blog.DataTransporter.Post.CreatePostDTO;
-import com.blog.DataTransporter.Post.GetPostDTO;
 import com.blog.DataTransporter.Post.ResponsePostDTO;
 import com.blog.DataTransporter.Post.UpdatePostDTO;
-import com.blog.Model.Post;
 import com.blog.Service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,15 +12,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("api/posts")
@@ -56,11 +51,11 @@ public class RestPostController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<ResponsePostDTO> getPost(
+    public ResponseEntity<ResponsePostDTO> findById(
         @Parameter(description = "ID of the post to retrieve", required = true, example = "1")
-        @PathVariable @Min(1) Long id
+        @PathVariable @Min(1) Integer id
     ) {
-        return postService.getPost(id).map(ResponsePostDTO::new).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        return postService.findById(id).map(ResponsePostDTO::new).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
     @GetMapping
     @Operation(
@@ -79,8 +74,8 @@ public class RestPostController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<Page<ResponsePostDTO>> getAllPosts(Pageable pageable) {
-        return ResponseEntity.ok(postService.getAllPosts(pageable).map(ResponsePostDTO::new));
+    public ResponseEntity<Page<ResponsePostDTO>> findAll(Pageable pageable) {
+        return ResponseEntity.ok(postService.findAll(pageable).map(ResponsePostDTO::new));
     }
     @PostMapping
     @Operation(
@@ -103,7 +98,7 @@ public class RestPostController {
         ResponsePostDTO response = new ResponsePostDTO(postService.save(createDTO));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-    @PutMapping("/{id}")
+    @PutMapping
     @Operation(
         summary = "Update post",
         description = "Updates an existing blog post with the provided details"
@@ -125,12 +120,8 @@ public class RestPostController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<ResponsePostDTO> updatePost(
-        @Parameter(description = "ID of the post to update", required = true, example = "1")
-        @PathVariable @Min(1) Integer id,
-        @Valid @RequestBody UpdatePostDTO updateDTO
-    ) {
-        ResponsePostDTO response = new ResponsePostDTO(postService.update(new UpdatePostDTO(id, updateDTO.userId(), updateDTO.title(), updateDTO.body(), updateDTO.draft())));
+    public ResponseEntity<ResponsePostDTO> updatePost(@Valid @RequestBody UpdatePostDTO updateDTO) {
+        ResponsePostDTO response = new ResponsePostDTO(postService.update(updateDTO));
         return ResponseEntity.ok(response);
     }
     @DeleteMapping("/{id}")
@@ -156,7 +147,7 @@ public class RestPostController {
     })
     public ResponseEntity<Void> deletePost(
         @Parameter(description = "ID of the post to delete", required = true, example = "1")
-        @PathVariable @Min(1) Long id
+        @PathVariable @Min(1) Integer id
     ) {
         postService.delete(id);
         return ResponseEntity.ok().build();

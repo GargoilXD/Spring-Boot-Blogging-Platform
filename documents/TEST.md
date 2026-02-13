@@ -62,16 +62,16 @@ This document provides comprehensive information about the unit tests created fo
 
 | Test Method | Description | Assertions |
 |-------------|-------------|------------|
-| `testGetAllTags_Success()` | Verifies retrieval of all tags | List contains expected tags |
-| `testGetAllTags_EmptyList()` | Verifies behavior with no tags | Returns empty list |
+| `testGetAllTags_Success()` | Verifies retrieval of all postTags | List contains expected postTags |
+| `testGetAllTags_EmptyList()` | Verifies behavior with no postTags | Returns empty list |
 | `testGetAllTags_ThrowsDataAccessException()` | Verifies exception handling | Throws DataAccessException |
-| `testGetAllTagsByPosts_Success()` | Verifies retrieval of tags grouped by posts | Map contains correct data |
+| `testGetAllTagsByPosts_Success()` | Verifies retrieval of postTags grouped by posts | Map contains correct data |
 | `testGetAllTagsByPosts_EmptyMap()` | Verifies behavior with no tag mappings | Returns empty map |
-| `testGetForPost_Success()` | Verifies retrieval of tags for a post | List contains post tags |
-| `testGetForPost_EmptyList()` | Verifies behavior with no tags for post | Returns empty list |
-| `testGetTagsForPost_Success()` | Verifies tag retrieval (alternate method) | List contains expected tags |
+| `testGetForPost_Success()` | Verifies retrieval of postTags for a post | List contains post postTags |
+| `testGetForPost_EmptyList()` | Verifies behavior with no postTags for post | Returns empty list |
+| `testGetTagsForPost_Success()` | Verifies tag retrieval (alternate method) | List contains expected postTags |
 | `testGetTagsForPost_ThrowsDataAccessException()` | Verifies exception handling | Throws DataAccessException |
-| `testSetPostTags_Success()` | Verifies setting tags for a post | Method is called correctly |
+| `testSetPostTags_Success()` | Verifies setting postTags for a post | Method is called correctly |
 | `testSetPostTags_EmptyList()` | Verifies setting empty tag list | Handles empty list |
 | `testSetPostTags_ThrowsDataAccessException()` | Verifies error handling | Throws DataAccessException |
 ---

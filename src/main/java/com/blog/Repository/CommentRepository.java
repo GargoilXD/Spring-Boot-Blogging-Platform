@@ -1,11 +1,10 @@
 package com.blog.Repository;
 
 import com.blog.Model.Comment;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
-import java.util.Optional;
 
-public interface CommentRepository extends MongoRepository<Comment, String> {
-    List<Comment> findByPostId(Long postId);
+public interface CommentRepository extends JpaRepository<Comment, Integer> {
+    List<Comment> findByPostId(Integer postId);
 }

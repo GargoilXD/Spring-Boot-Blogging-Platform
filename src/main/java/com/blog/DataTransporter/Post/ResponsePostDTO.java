@@ -23,7 +23,4 @@ public record ResponsePostDTO(
     public ResponsePostDTO(Post post) {
         this(post.getId(), post.getUserId(), post.getTitle(), post.isDraft());
     }
-    public Post toEntity() {
-        throw new UnsupportedOperationException();
-    }
 }

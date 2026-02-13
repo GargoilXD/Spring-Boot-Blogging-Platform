@@ -12,13 +12,12 @@ public class AppConfig {
 	@Bean
 	public CacheManager cacheManager() {
 		return new ConcurrentMapCacheManager(
-				"posts",
-				"postsList",
-				"postCounts",
-				"tags",
-				"tagsByPosts",
-				"tagsForPost",
-				"commentsForPost"
+				"Post.getAll",
+				"Post.findById",
+				"Post.count",
+				"Comment.findByPostId",
+				"PostTags.findAll",
+				"PostTags.findByPostId"
 		);
 	}
 }

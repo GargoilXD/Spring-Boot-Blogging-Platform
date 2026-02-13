@@ -3,7 +3,7 @@
 A full-featured RESTful and GraphQL blogging platform built with Spring Boot 3.5, featuring a hybrid data architecture with PostgreSQL and MongoDB.
 ## Overview
 
-This blogging platform is a modern, scalable application that demonstrates best practices in Spring Boot development. It implements a hybrid database architecture using PostgreSQL for relational data (users and posts) and MongoDB for document-based data (comments and tags), providing both REST and GraphQL APIs.
+This blogging platform is a modern, scalable application that demonstrates best practices in Spring Boot development. It implements a hybrid database architecture using PostgreSQL for relational data (users and posts) and MongoDB for document-based data (comments and postTags), providing both REST and GraphQL APIs.
 
 ## Features
 
@@ -26,9 +26,9 @@ This blogging platform is a modern, scalable application that demonstrates best 
   - MongoDB-based storage for scalability
 
 - **Tagging System**
-  - Add multiple tags to posts
-  - Retrieve all available tags
-  - Filter posts by tags
+  - Add multiple postTags to posts
+  - Retrieve all available postTags
+  - Filter posts by postTags
   - MongoDB-based tag storage
 
 ### Technical Features
@@ -281,9 +281,9 @@ mvn spring-boot:run
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/tags` | Get all tags |
-| GET | `/api/tags/post/{postId}` | Get tags for a specific post |
-| POST | `/api/tags/post/{postId}` | Set tags for a post |
+| GET | `/api/postTags` | Get all postTags |
+| GET | `/api/postTags/post/{postId}` | Get postTags for a specific post |
+| POST | `/api/postTags/post/{postId}` | Set postTags for a post |
 
 ### GraphQL API
 
@@ -301,7 +301,7 @@ query {
     username
     draft
     createdAt
-    tags
+    postTags
     comments {
       id
       username
@@ -322,12 +322,12 @@ query {
   }
 }
 
-# Get all tags
+# Get all postTags
 query {
   getAllTags
 }
 
-# Get tags for a post
+# Get postTags for a post
 query {
   getTagsForPost(postID: "1")
 }
@@ -414,9 +414,9 @@ mutation {
   deleteComment(id: "comment_id")
 }
 
-# Set tags for a post
+# Set postTags for a post
 mutation {
-  setPostTags(postID: "1", tags: ["technology", "spring-boot", "java"])
+  setPostTags(postID: "1", postTags: ["technology", "spring-boot", "java"])
 }
 ```
 
@@ -468,7 +468,7 @@ CREATE TABLE posts (
 {
   "_id": "ObjectId",
   "postId": "Long",
-  "tags": ["String"]
+  "postTags": ["String"]
 }
 ```
 
