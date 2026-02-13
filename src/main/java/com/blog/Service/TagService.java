@@ -32,16 +32,21 @@ public class TagService {
     public List<String> findByPostId(int postId) {
         return repository.findByPostId(postId).map(PostTags::getTags).orElse(Collections.emptyList());
     }
+    @Cacheable(cacheNames = "PostTags.count")
+    public long count() {
+        return repository.count();
+    }
     @Caching(evict = {
-            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#postId"),
+            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#DTO.postId"),
             @CacheEvict(cacheNames = {"PostTags.findAll", "PostTags.count"}, allEntries = true)
     })
     public void setPostTags(PostTagsDTO DTO) {
         postRepository.findById(DTO.postId()).orElseThrow(() -> new EntityNotFoundException("Post not found: " + DTO.postId()));
+        repository.findByPostId(DTO.postId()).ifPresent(existing -> repository.delete(existing));
         repository.save(DTO.toEntity());
     }
     @Caching(evict = {
-            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#postId"),
+            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#DTO.postId"),
             @CacheEvict(cacheNames = {"PostTags.findAll", "PostTags.count"}, allEntries = true)
     })
     public void addTagsToPost(PostTagsDTO DTO) {
@@ -53,7 +58,7 @@ public class TagService {
         repository.save(existing);
     }
     @Caching(evict = {
-            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#postId"),
+            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#DTO.postId"),
             @CacheEvict(cacheNames = {"PostTags.findAll", "PostTags.count"}, allEntries = true)
     })
     public void removeTagsFromPost(PostTagsDTO DTO) {

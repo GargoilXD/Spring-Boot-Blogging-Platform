@@ -17,7 +17,8 @@ public class AppConfig {
 				"Post.count",
 				"Comment.findByPostId",
 				"PostTags.findAll",
-				"PostTags.findByPostId"
+				"PostTags.findByPostId",
+				"PostTags.count"
 		);
 	}
 }

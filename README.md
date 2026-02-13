@@ -191,7 +191,6 @@ cd src/main/resources/mongo
 
 # Run the insert scripts (requires mongosh or mongo CLI)
 bash insert_tags.sh
-bash insert_comments.sh
 ```
 
 ## Configuration

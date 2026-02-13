@@ -15,18 +15,20 @@ type Mutation {
     addComment(input: CreateCommentInput!): Boolean
     updateComment(input: UpdateCommentInput!): Boolean
     deleteComment(id: ID!): Boolean
-    setPostTags(postID: ID!, postTags: [String!]!): Boolean
+    setPostTags(postID: ID!, tags: [String!]!): Boolean
+    addTagsToPost(postID: ID!, tags: [String!]!): Boolean
+    removeTagsFromPost(postID: ID!, tags: [String!]!): Boolean
+    deleteByPostId(postID: ID!): Boolean
 }
 
 type Post {
     id: ID!
     userId: ID!
-    username: String!
     title: String!
     body: String!
     draft: Boolean!
     createdAt: String!
-    postTags: [String]
+    tags: [String]
     comments: [Comment]
 }
 

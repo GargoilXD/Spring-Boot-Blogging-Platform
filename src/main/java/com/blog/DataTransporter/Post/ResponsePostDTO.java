@@ -21,9 +21,12 @@ public record ResponsePostDTO(
     String body,
     @NotNull(message = "Draft status is required")
     @Schema(description = "Whether the post is a draft", example = "false")
-    boolean draft
+    boolean draft,
+    @NotNull(message = "Created at is required")
+    @Schema(description = "Date and time when the post was created", example = "2023-07-25T12:00:00Z")
+    String createdAt
 ) {
     public ResponsePostDTO(Post post) {
-        this(post.getId(), post.getUserId(), post.getTitle(), post.getBody(), post.isDraft());
+        this(post.getId(), post.getUserId(), post.getTitle(), post.getBody(), post.isDraft(), post.getCreatedAt().toString());
     }
 }
