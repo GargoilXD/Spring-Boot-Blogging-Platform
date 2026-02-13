@@ -6,19 +6,19 @@ import jakarta.validation.constraints.NotBlank;
 
 @Schema(description = "User registration details")
 public record RegisterUserDTO(
-    @NotBlank
+    @NotBlank(message = "Username is required")
     @Schema(description = "Username (minimum 3 characters)", example = "john doe", minLength = 3)
     String username,
-    @NotBlank
+    @NotBlank(message = "Password is required")
     @Schema(description = "Password (minimum 8 characters)", example = "SecurePass123!", minLength = 8)
     String password,
-    @NotBlank
+    @NotBlank(message = "Full name is required")
     @Schema(description = "Full name of the user", example = "John Doe")
     String fullName,
-    @NotBlank
+    @NotBlank(message = "Email is required")
     @Schema(description = "Email address", example = "john.doe@example.com")
     String email,
-    @NotBlank
+    @NotBlank(message = "Gender is required")
     @Schema(description = "Gender of the user", example = "Male")
     String gender
 ) {

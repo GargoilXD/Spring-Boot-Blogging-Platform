@@ -1,10 +1,13 @@
 package com.blog.Service;
 
+import com.blog.Model.User;
+import com.blog.Repository.CommentRepository;
 import com.blog.Repository.PostRepository;
 import com.blog.DataTransporter.Post.CreatePostDTO;
 import com.blog.DataTransporter.Post.UpdatePostDTO;
 import com.blog.Model.Post;
 
+import com.blog.Repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 
 import jakarta.validation.constraints.NotNull;
@@ -17,20 +20,27 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Caching;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
 public class PostService {
     private final PostRepository repository;
+    private final UserRepository userRepository;
+    private final CommentRepository commentRepository;
+    private final TagService tagService;
 
-    public PostService(PostRepository repository) {
+    public PostService(PostRepository repository, UserRepository userRepository, CommentRepository commentRepository, TagService tagService) {
         this.repository = repository;
+        this.userRepository = userRepository;
+        this.commentRepository = commentRepository;
+        this.tagService = tagService;
     }
     @Cacheable(cacheNames = "Post.findById", key = "#ID")
     public Optional<Post> findById(int ID) {
         return repository.findById(ID);
     }
-    @Cacheable(cacheNames = "Post.getAll", key = "{#pageable.pageNumber, #pageable.pageSize}")
+    @Cacheable(cacheNames = "Post.getAll", key = "{#pageable.pageNumber, #pageable.pageSize, #pageable.sort}")
     public Page<Post> findAll(Pageable pageable) {
         return repository.findAll(pageable);
     }
@@ -39,32 +49,28 @@ public class PostService {
         return repository.count();
     }
     @Transactional
-    @Caching(evict = {
-        @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true)
-    }, put = {
-        @CachePut(cacheNames = "Post.findById", key = "#result.id")
-    })
+    @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true)
     public Post save(@NotNull CreatePostDTO DTO) {
+        userRepository.findById(DTO.userId()).orElseThrow(() -> new EntityNotFoundException("User not found: " + DTO.userId()));
         return repository.save(DTO.toEntity());
     }
     @Transactional
-    @Caching(evict = {
-        @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true),
-        @CacheEvict(cacheNames = "Post.findById", key = "#DTO.postId()")
-    }, put = {
-        @CachePut(cacheNames = "Post.findById", key = "#DTO.postId()")
-    })
+    @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true)
     public Post update(@NotNull UpdatePostDTO DTO) {
-        repository.findById(DTO.postId()).orElseThrow(() -> new EntityNotFoundException("Post not found: " + DTO.postId()));
+        Post post = repository.findById(DTO.postId()).orElseThrow(() -> new EntityNotFoundException("Post not found: " + DTO.postId()));
+        User user = userRepository.findById(DTO.userId()).orElseThrow(() -> new EntityNotFoundException("User not found: " + DTO.userId()));
+        if (!Objects.equals(post.getUserId(), user.getId())) throw new EntityNotFoundException("User does not own this post: " + DTO.postId());
         return repository.save(DTO.toEntity());
     }
     @Transactional
     @Caching(evict = {
-        @CacheEvict(cacheNames = "Post.findById", key = "#id"),
+        @CacheEvict(cacheNames = "Post.findById", key = "#ID"),
         @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true)
     })
     public void delete(int ID) {
         repository.findById(ID).orElseThrow(() -> new EntityNotFoundException("Post not found: " + ID));
+        tagService.deleteByPostId(ID);
+        commentRepository.deleteByPostId(ID);
         repository.deleteById(ID);
     }
 }

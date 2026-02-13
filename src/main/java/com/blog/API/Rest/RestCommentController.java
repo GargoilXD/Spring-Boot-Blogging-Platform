@@ -84,7 +84,7 @@ public class RestCommentController {
     public ResponseEntity<SuccessResponse<ResponseCommentDTO>> createComment(@Valid @RequestBody CreateCommentDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse<>(HttpStatus.CREATED, "Comment created successfully", new ResponseCommentDTO(commentService.save(dto))))  ;
     }
-    @PutMapping("/{id}")
+    @PutMapping
     @Operation(
         summary = "Update comment",
         description = "Updates an existing comment with the provided details"
@@ -106,12 +106,8 @@ public class RestCommentController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<SuccessResponse<ResponseCommentDTO>> updateComment(
-        @Parameter(description = "ID of the comment to update", required = true, example = "507f1f77bcf86cd799439011")
-        @PathVariable Integer id,
-        @Valid @RequestBody UpdateCommentDTO dto
-    ) {
-        return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Comment updated successfully", new ResponseCommentDTO(commentService.update(new UpdateCommentDTO(id, dto.userId(), dto.postId(), dto.body())))));
+    public ResponseEntity<SuccessResponse<ResponseCommentDTO>> updateComment(@Valid @RequestBody UpdateCommentDTO dto) {
+        return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Comment updated successfully", new ResponseCommentDTO(commentService.update(dto))));
     }
     @DeleteMapping("/{id}")
     @Operation(
@@ -134,6 +130,6 @@ public class RestCommentController {
         @PathVariable Integer id
     ) {
         commentService.delete(id);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new SuccessResponse<>(HttpStatus.NO_CONTENT, "Comment deleted successfully"));
+        return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Comment deleted successfully"));
     }
 }

@@ -8,19 +8,22 @@ import jakarta.validation.constraints.NotNull;
 
 @Schema(description = "Data for updating an existing comment")
 public record UpdateCommentDTO(
-    @NotNull @Min(1)
+    @NotNull(message = "Comment ID is required") @Min(1)
     @Schema(description = "ID of the comment to update", example = "1")
     Integer id,
-    @NotNull @Min(1)
+    @NotNull(message = "User ID is required") @Min(1)
     @Schema(description = "ID of the user who created the comment", example = "1")
     Integer userId,
-    @NotNull
+    @NotNull(message = "Post ID is required") @Min(1)
     @Schema(description = "ID of the post being commented on", example = "1")
     Integer postId,
-    @NotBlank
+    @NotBlank(message = "Comment body is required")
     @Schema(description = "Updated content of the comment", example = "Updated comment text...")
     String body
 ) {
+    public UpdateCommentDTO {
+        body = body.trim();
+    }
     public UpdateCommentDTO(Comment comment) {
         this(comment.getId(), comment.getUserId(), comment.getPostId(), comment.getBody());
     }

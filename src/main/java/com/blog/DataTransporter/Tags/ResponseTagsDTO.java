@@ -11,8 +11,8 @@ public record ResponseTagsDTO(
         @Schema(description = "ID of the post to update", example = "1")
         @NotNull
         Integer PostID,
-        @Schema(description = "ID of the post to update", example = "1")
-        @NotNull
+        @Schema(description = "Tags for the post", example = "['tag1', 'tag2']")
+        @NotNull(message = "Tags are required")
         List<String> tags
 ) {
     public ResponseTagsDTO(PostTags postTags) {
