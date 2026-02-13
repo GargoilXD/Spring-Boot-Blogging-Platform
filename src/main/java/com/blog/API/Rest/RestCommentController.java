@@ -1,5 +1,6 @@
 package com.blog.API.Rest;
 
+import com.blog.API.Response.SuccessResponse;
 import com.blog.DataTransporter.Comment.CreateCommentDTO;
 import com.blog.DataTransporter.Comment.ResponseCommentDTO;
 import com.blog.DataTransporter.Comment.UpdateCommentDTO;
@@ -52,11 +53,11 @@ public class RestCommentController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<List<ResponseCommentDTO>> getCommentsForPost(
+    public ResponseEntity<SuccessResponse<List<ResponseCommentDTO>>> getCommentsForPost(
         @Parameter(description = "ID of the post to retrieve comments for", required = true, example = "1")
         @PathVariable @Min(1) Integer postId
     ) {
-        return ResponseEntity.ok(commentService.findByPostId(postId).stream().map(ResponseCommentDTO::new).toList());
+        return ResponseEntity.ok(new SuccessResponse<>(HttpStatus.OK, "Comments retrieved successfully", commentService.findByPostId(postId).stream().map(ResponseCommentDTO::new).toList()));
     }
     @PostMapping
     @Operation(
@@ -80,8 +81,8 @@ public class RestCommentController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<ResponseCommentDTO> createComment(@Valid @RequestBody CreateCommentDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseCommentDTO(commentService.save(dto)));
+    public ResponseEntity<SuccessResponse<ResponseCommentDTO>> createComment(@Valid @RequestBody CreateCommentDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse<>(HttpStatus.CREATED, "Comment created successfully", new ResponseCommentDTO(commentService.save(dto))))  ;
     }
     @PutMapping("/{id}")
     @Operation(
@@ -105,12 +106,12 @@ public class RestCommentController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<ResponseCommentDTO> updateComment(
+    public ResponseEntity<SuccessResponse<ResponseCommentDTO>> updateComment(
         @Parameter(description = "ID of the comment to update", required = true, example = "507f1f77bcf86cd799439011")
         @PathVariable Integer id,
         @Valid @RequestBody UpdateCommentDTO dto
     ) {
-        return ResponseEntity.status(HttpStatus.OK).body(new ResponseCommentDTO(commentService.update(new UpdateCommentDTO(id, dto.userId(), dto.postId(), dto.body()))));
+        return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Comment updated successfully", new ResponseCommentDTO(commentService.update(new UpdateCommentDTO(id, dto.userId(), dto.postId(), dto.body())))));
     }
     @DeleteMapping("/{id}")
     @Operation(
@@ -128,11 +129,11 @@ public class RestCommentController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<Void> deleteComment(
+    public ResponseEntity<SuccessResponse<Void>> deleteComment(
         @Parameter(description = "ID of the comment to delete", required = true, example = "507f1f77bcf86cd799439011")
         @PathVariable Integer id
     ) {
         commentService.delete(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(new SuccessResponse<>(HttpStatus.NO_CONTENT, "Comment deleted successfully"));
     }
 }

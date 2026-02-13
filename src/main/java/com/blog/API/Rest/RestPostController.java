@@ -1,5 +1,6 @@
 package com.blog.API.Rest;
 
+import com.blog.API.Response.SuccessResponse;
 import com.blog.DataTransporter.Post.CreatePostDTO;
 import com.blog.DataTransporter.Post.ResponsePostDTO;
 import com.blog.DataTransporter.Post.UpdatePostDTO;
@@ -51,11 +52,11 @@ public class RestPostController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<ResponsePostDTO> findById(
+    public ResponseEntity<SuccessResponse<ResponsePostDTO>> findById(
         @Parameter(description = "ID of the post to retrieve", required = true, example = "1")
         @PathVariable @Min(1) Integer id
     ) {
-        return postService.findById(id).map(ResponsePostDTO::new).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        return postService.findById(id).map(ResponsePostDTO::new).map(dto -> ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Post found and returned successfully", dto))).orElse(ResponseEntity.status(HttpStatus.NOT_FOUND).body(new SuccessResponse<>(HttpStatus.NOT_FOUND, "Post not found")));
     }
     @GetMapping
     @Operation(
@@ -74,8 +75,8 @@ public class RestPostController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<Page<ResponsePostDTO>> findAll(Pageable pageable) {
-        return ResponseEntity.ok(postService.findAll(pageable).map(ResponsePostDTO::new));
+    public ResponseEntity<SuccessResponse<Page<ResponsePostDTO>>> findAll(Pageable pageable) {
+        return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Posts retrieved successfully", postService.findAll(pageable).map(ResponsePostDTO::new))) ;
     }
     @PostMapping
     @Operation(
@@ -94,9 +95,9 @@ public class RestPostController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<ResponsePostDTO> createPost(@Valid @RequestBody CreatePostDTO createDTO) {
+    public ResponseEntity<SuccessResponse<ResponsePostDTO>> createPost(@Valid @RequestBody CreatePostDTO createDTO) {
         ResponsePostDTO response = new ResponsePostDTO(postService.save(createDTO));
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse<>(HttpStatus.CREATED, "Post created successfully", response));
     }
     @PutMapping
     @Operation(
@@ -120,9 +121,9 @@ public class RestPostController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<ResponsePostDTO> updatePost(@Valid @RequestBody UpdatePostDTO updateDTO) {
+    public ResponseEntity<SuccessResponse<ResponsePostDTO>> updatePost(@Valid @RequestBody UpdatePostDTO updateDTO) {
         ResponsePostDTO response = new ResponsePostDTO(postService.update(updateDTO));
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Post updated successfully", response))   ;
     }
     @DeleteMapping("/{id}")
     @Operation(
@@ -145,11 +146,11 @@ public class RestPostController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<Void> deletePost(
+    public ResponseEntity<SuccessResponse<Void>> deletePost(
         @Parameter(description = "ID of the post to delete", required = true, example = "1")
         @PathVariable @Min(1) Integer id
     ) {
         postService.delete(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Post deleted successfully")) ;
     }
 }

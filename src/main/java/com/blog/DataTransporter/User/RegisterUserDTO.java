@@ -25,9 +25,14 @@ public record RegisterUserDTO(
     public RegisterUserDTO {
         username = username.trim();
         email = email.trim();
-        if (username().length() < 3) throw new IllegalArgumentException("Username must be at least 3 characters");
-        if (password().length() < 8) throw new IllegalArgumentException("Password must be at least 8 characters");
-        if (!email().trim().matches("^[A-Za-z0-9+_.-]+@(.+)$")) throw new IllegalArgumentException("Invalid email format");
+        gender = switch (gender.trim().toUpperCase()) {
+            case "MALE", "FEMALE", "OTHER" -> String.valueOf(gender.charAt(0)).toUpperCase();
+            case "F", "M" -> gender.trim().toUpperCase();
+            default -> throw new IllegalArgumentException("Invalid gender");
+        };
+        if (username.length() < 3) throw new IllegalArgumentException("Username must be at least 3 characters");
+        if (password.length() < 8) throw new IllegalArgumentException("Password must be at least 8 characters");
+        if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) throw new IllegalArgumentException("Invalid email format");
     }
 
     public User toEntity() {

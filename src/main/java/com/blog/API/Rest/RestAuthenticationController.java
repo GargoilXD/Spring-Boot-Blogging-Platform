@@ -1,5 +1,6 @@
 package com.blog.API.Rest;
 
+import com.blog.API.Response.SuccessResponse;
 import com.blog.DataTransporter.User.LoginUserDTO;
 import com.blog.DataTransporter.User.RegisterUserDTO;
 import com.blog.Service.AuthenticationService;
@@ -45,9 +46,9 @@ public class RestAuthenticationController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<Void> login(@RequestBody LoginUserDTO request) {
+    public ResponseEntity<SuccessResponse<Void>> login(@RequestBody LoginUserDTO request) {
         authService.login(request.username(), request.password());
-        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(new SuccessResponse<>(HttpStatus.ACCEPTED, "User authenticated successfully"));
     }
     @PostMapping("/register")
     @Operation(
@@ -70,8 +71,8 @@ public class RestAuthenticationController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<Void> register(@RequestBody RegisterUserDTO request) {
+    public ResponseEntity<SuccessResponse<Void>> register(@RequestBody RegisterUserDTO request) {
         authService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse<>(HttpStatus.CREATED, "User registered successfully"))    ;
     }
 }

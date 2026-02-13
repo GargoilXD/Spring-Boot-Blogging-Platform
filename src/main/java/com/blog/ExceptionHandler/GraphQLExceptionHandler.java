@@ -8,9 +8,7 @@ import org.springframework.graphql.execution.DataFetcherExceptionResolverAdapter
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
-import com.blog.Exception.DataAccessException;
 import com.blog.Exception.AuthenticationException;
-import com.blog.Exception.UserAlreadyExistsException;
 
 @Component
 public class GraphQLExceptionHandler extends DataFetcherExceptionResolverAdapter {
@@ -34,35 +32,22 @@ public class GraphQLExceptionHandler extends DataFetcherExceptionResolverAdapter
             fieldName, 
             exception.getMessage()
         );
-        if (exception instanceof IllegalArgumentException) {
-            logger.warn(logMessage);
-        } else if (exception instanceof AuthenticationException) {
-            logger.warn(logMessage);
-        } else if (exception instanceof UserAlreadyExistsException) {
-            logger.warn(logMessage);
-        } else if (exception instanceof DataAccessException) {
-            logger.error(logMessage, exception);
-        } else {
-            logger.error(logMessage, exception);
+        switch (exception) {
+            case IllegalArgumentException illegalArgumentException -> logger.warn(logMessage);
+            case AuthenticationException authenticationException -> logger.warn(logMessage);
+            default -> logger.error(logMessage, exception);
         }
     }
     
     private String buildErrorMessage(Throwable exception) {
         String profile = System.getProperty("spring.profiles.active", "dev");
         boolean isDev = "dev".equals(profile) || "local".equals(profile);
-        
-        if (exception instanceof IllegalArgumentException) {
-            return "Invalid input: " + exception.getMessage();
-        } else if (exception instanceof AuthenticationException) {
-            return "Authentication failed";
-        } else if (exception instanceof UserAlreadyExistsException) {
-            return "Username already exists";
-        } else if (exception instanceof DataAccessException) {
-            return "Database error occurred";
-        } else if (exception instanceof RuntimeException && exception.getMessage() != null) {
-            return isDev ? exception.getMessage() : "Request failed";
-        } else {
-            return isDev ? "Internal error: " + exception.getClass().getSimpleName() : "Request failed";
-        }
+
+        return switch (exception) {
+            case IllegalArgumentException illegalArgumentException -> "Invalid input: " + exception.getMessage();
+            case AuthenticationException authenticationException -> "Authentication failed";
+            case RuntimeException runtimeException when exception.getMessage() != null -> isDev ? exception.getMessage() : "Request failed";
+            default -> isDev ? "Internal error: " + exception.getClass().getSimpleName() : "Request failed";
+        };
     }
 }
