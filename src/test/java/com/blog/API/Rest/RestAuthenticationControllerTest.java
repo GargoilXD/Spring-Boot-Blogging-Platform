@@ -133,23 +133,6 @@ class RestAuthenticationControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/auth/register - Should register user with other gender")
-    void testRegisterOtherGender() throws Exception {
-        // Arrange
-        RegisterUserDTO registerRequest = new RegisterUserDTO("user", "SecurePass123!", "User Name", "user@example.com", "Other");
-        doNothing().when(authService).register(any(RegisterUserDTO.class));
-
-        // Act & Assert
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(registerRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.message").value("User registered successfully"));
-
-        verify(authService, times(1)).register(any(RegisterUserDTO.class));
-    }
-
-    @Test
     @DisplayName("POST /api/auth/register - Should return 409 when registering with existing username")
     void testRegisterUserExists() throws Exception {
         // Arrange

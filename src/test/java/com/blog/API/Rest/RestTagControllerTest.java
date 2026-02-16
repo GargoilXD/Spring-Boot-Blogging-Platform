@@ -67,7 +67,7 @@ class RestTagControllerTest {
         // Act & Assert
         mockMvc.perform(get("/api/tags?page=0&size=10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(2));
+                .andExpect(jsonPath("$.data.content.length()").value(2));
 
         verify(tagService, times(1)).findAll(any());
     }
@@ -84,7 +84,7 @@ class RestTagControllerTest {
         // Act & Assert
         mockMvc.perform(get("/api/tags?page=0&size=5"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(1));
+                .andExpect(jsonPath("$.data.content.length()").value(1));
 
         verify(tagService, times(1)).findAll(any());
     }
