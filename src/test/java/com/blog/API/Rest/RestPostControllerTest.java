@@ -101,7 +101,7 @@ class RestPostControllerTest {
         // Act & Assert
         mockMvc.perform(get("/api/posts?page=0&size=10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(2));
+                .andExpect(jsonPath("$.data.content.length()").value(2));
 
         verify(postService, times(1)).findAll(any());
     }
@@ -119,7 +119,7 @@ class RestPostControllerTest {
         // Act & Assert
         mockMvc.perform(get("/api/posts?page=0&size=10&sort=title,desc"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(2));
+                .andExpect(jsonPath("$.data.content.length()").value(2));
 
         verify(postService, times(1)).findAll(any());
     }
