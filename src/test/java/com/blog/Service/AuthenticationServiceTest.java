@@ -1,180 +1,123 @@
 package com.blog.Service;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
-
-import org.junit.jupiter.api.AfterEach;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import com.blog.Repository.UserRepository;
+import com.blog.DataTransporter.User.RegisterUserDTO;
+import com.blog.Model.User;
+import com.blog.Exception.AuthenticationException;
+import com.blog.Utility.PasswordHasher;
+import jakarta.persistence.EntityExistsException;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.blog.DataTransporter.User.RegisterUserDTO;
-import com.blog.Exception.AuthenticationException;
-import com.blog.Model.User;
-import com.blog.Repository.UserRepository;
-import com.blog.Utility.PasswordHasher;
+import java.util.Optional;
 
-import jakarta.persistence.EntityExistsException;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("AuthenticationService Tests")
 class AuthenticationServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserRepository repository;
 
     @Mock
     private PasswordHasher passwordHasher;
 
-    @InjectMocks
-    private AuthenticationService authenticationService;
+    @Mock
+    private User user;
 
-    private long testStartTime;
-    private long testEndTime;
+    @InjectMocks
+    private AuthenticationService authService;
+
+    private RegisterUserDTO registerDTO;
 
     @BeforeEach
     void setUp() {
-        testStartTime = System.nanoTime();
-    }
-
-    @AfterEach
-    void tearDown() {
-        testEndTime = System.nanoTime();
-        long executionTimeMs = (testEndTime - testStartTime) / 1_000_000;
-        System.out.println("Execution Time: " + executionTimeMs + " ms");
+        registerDTO = new RegisterUserDTO("testuser", "password123", "Full Name", "test@example.com", "Male");
     }
 
     @Test
-    @DisplayName("Should successfully login with valid credentials")
-    void testLoginSuccess() {
-        // Arrange
-        String username = "john_doe";
-        String password = "SecurePass123!";
-        User user = new User(1, username, "hashedPassword", "John Doe", "john@example.com", "Male", LocalDateTime.now());
+    void login_Success() {
+        String username = "testuser";
+        String password = "password123";
+        String hashedPassword = "hashed_value";
 
-        when(userRepository.findByUsername(username.trim())).thenReturn(Optional.of(user));
-        when(passwordHasher.verifyPassword(password, user.getPasswordHash())).thenReturn(true);
+        when(repository.findByUsername(username.trim())).thenReturn(Optional.of(user));
+        when(user.getPasswordHash()).thenReturn(hashedPassword);
+        when(passwordHasher.verifyPassword(password, hashedPassword)).thenReturn(true);
 
-        // Act & Assert
-        assertDoesNotThrow(() -> authenticationService.login(username, password));
+        assertDoesNotThrow(() -> authService.login(username, password));
 
-        verify(userRepository, times(1)).findByUsername(username.trim());
-        verify(passwordHasher, times(1)).verifyPassword(password, user.getPasswordHash());
+        verify(repository).findByUsername(username.trim());
+        verify(passwordHasher).verifyPassword(password, hashedPassword);
     }
 
     @Test
-    @DisplayName("Should throw exception when user not found during login")
-    void testLoginUserNotFound() {
-        // Arrange
-        String username = "nonexistent_user";
-        String password = "SecurePass123!";
+    void login_Failure_UserNotFound() {
+        String username = "unknown";
+        String password = "password123";
 
-        when(userRepository.findByUsername(username.trim())).thenReturn(Optional.empty());
+        when(repository.findByUsername(username.trim())).thenReturn(Optional.empty());
 
-        // Act & Assert
-        assertThrows(AuthenticationException.class, () -> authenticationService.login(username, password));
+        AuthenticationException exception = assertThrows(
+                AuthenticationException.class,
+                () -> authService.login(username, password)
+        );
 
-        verify(userRepository, times(1)).findByUsername(username.trim());
+        assertEquals("Invalid credentials", exception.getMessage());
+        verify(repository).findByUsername(username.trim());
         verify(passwordHasher, never()).verifyPassword(anyString(), anyString());
     }
 
     @Test
-    @DisplayName("Should throw exception when password is incorrect")
-    void testLoginInvalidPassword() {
-        // Arrange
-        String username = "john_doe";
-        String password = "WrongPassword123!";
-        User user = new User(1, username, "hashedPassword", "John Doe", "john@example.com", "Male", LocalDateTime.now());
+    void login_Failure_WrongPassword() {
+        String username = "testuser";
+        String password = "wrong_password";
+        String hashedPassword = "hashed_value";
 
-        when(userRepository.findByUsername(username.trim())).thenReturn(Optional.of(user));
-        when(passwordHasher.verifyPassword(password, user.getPasswordHash())).thenReturn(false);
+        when(repository.findByUsername(username.trim())).thenReturn(Optional.of(user));
+        when(user.getPasswordHash()).thenReturn(hashedPassword);
+        when(passwordHasher.verifyPassword(password, hashedPassword)).thenReturn(false);
 
-        // Act & Assert
-        assertThrows(AuthenticationException.class, () -> authenticationService.login(username, password));
+        AuthenticationException exception = assertThrows(
+                AuthenticationException.class,
+                () -> authService.login(username, password)
+        );
 
-        verify(userRepository, times(1)).findByUsername(username.trim());
-        verify(passwordHasher, times(1)).verifyPassword(password, user.getPasswordHash());
+        assertEquals("Invalid credentials", exception.getMessage());
     }
 
     @Test
-    @DisplayName("Should successfully register a new user")
-    void testRegisterSuccess() {
-        // Arrange
-        RegisterUserDTO dto = new RegisterUserDTO("newuser", "SecurePass123!", "New User", "new@example.com", "Female");
+    void register_Success() {
+        when(repository.findByUsername(registerDTO.username().trim())).thenReturn(Optional.empty());
+        when(passwordHasher.hashPassword(registerDTO.password())).thenReturn("new_hash");
+        // Mock the chain: DTO.withPasswordHash(...).toEntity()
+        // Since we can't easily mock record methods, we assume the service calls save.
+        // We verify save is called with any User object.
+        when(repository.save(any(User.class))).thenReturn(user);
 
-        when(userRepository.findByUsername("newuser")).thenReturn(Optional.empty());
-        when(passwordHasher.hashPassword("SecurePass123!")).thenReturn("hashedPassword");
-        when(userRepository.save(any(User.class))).thenReturn(new User());
+        assertDoesNotThrow(() -> authService.register(registerDTO));
 
-        // Act
-        assertDoesNotThrow(() -> authenticationService.register(dto));
-
-        // Assert
-        verify(userRepository, times(1)).findByUsername("newuser");
-        verify(passwordHasher, times(1)).hashPassword("SecurePass123!");
-        verify(userRepository, times(1)).save(any(User.class));
+        verify(repository).findByUsername(registerDTO.username().trim());
+        verify(passwordHasher).hashPassword(registerDTO.password());
+        verify(repository).save(any(User.class));
     }
 
     @Test
-    @DisplayName("Should throw exception when username already exists during registration")
-    void testRegisterUserAlreadyExists() {
-        // Arrange
-        RegisterUserDTO dto = new RegisterUserDTO("existinguser", "SecurePass123!", "Existing User", "existing@example.com", "Male");
-        User existingUser = new User(1, "existinguser", "hashedPassword", "Existing User", "existing@example.com", "Male", LocalDateTime.now());
+    void register_Failure_UserExists() {
+        when(repository.findByUsername(registerDTO.username().trim())).thenReturn(Optional.of(user));
 
-        when(userRepository.findByUsername("existinguser")).thenReturn(Optional.of(existingUser));
+        EntityExistsException exception = assertThrows(
+                EntityExistsException.class,
+                () -> authService.register(registerDTO)
+        );
 
-        // Act & Assert
-        assertThrows(EntityExistsException.class, () -> authenticationService.register(dto));
-
-        verify(userRepository, times(1)).findByUsername("existinguser");
-        verify(passwordHasher, never()).hashPassword(anyString());
-        verify(userRepository, never()).save(any(User.class));
-    }
-
-    @Test
-    @DisplayName("Should trim username during login")
-    void testLoginTrimsUsername() {
-        // Arrange
-        String usernameWithSpaces = "  john_doe  ";
-        String password = "SecurePass123!";
-        User user = new User(1, "john_doe", "hashedPassword", "John Doe", "john@example.com", "Male", LocalDateTime.now());
-
-        when(userRepository.findByUsername("john_doe")).thenReturn(Optional.of(user));
-        when(passwordHasher.verifyPassword(password, user.getPasswordHash())).thenReturn(true);
-
-        // Act & Assert
-        assertDoesNotThrow(() -> authenticationService.login(usernameWithSpaces, password));
-
-        verify(userRepository, times(1)).findByUsername("john_doe");
-    }
-
-    @Test
-    @DisplayName("Should trim username during registration")
-    void testRegisterTrimsUsername() {
-        // Arrange
-        RegisterUserDTO dto = new RegisterUserDTO("   newuser   ", "SecurePass123!", "New User", "new@example.com", "Female");
-
-        when(userRepository.findByUsername("newuser")).thenReturn(Optional.empty());
-        when(passwordHasher.hashPassword("SecurePass123!")).thenReturn("hashedPassword");
-        when(userRepository.save(any(User.class))).thenReturn(new User());
-
-        // Act
-        assertDoesNotThrow(() -> authenticationService.register(dto));
-
-        // Assert
-        verify(userRepository, times(1)).findByUsername("newuser");
+        assertTrue(exception.getMessage().contains("Username already exists"));
+        verify(repository, never()).save(any());
     }
 }

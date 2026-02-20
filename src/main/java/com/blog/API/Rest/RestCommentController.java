@@ -89,7 +89,7 @@ public class RestCommentController {
     public ResponseEntity<SuccessResponse<ResponseCommentDTO>> createComment(@Valid @RequestBody CreateCommentDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse<>(HttpStatus.CREATED, "Comment created successfully", new ResponseCommentDTO(commentService.save(dto))))  ;
     }
-    @PutMapping
+    @PutMapping("/{id}")
     @Operation(
         summary = "Update comment",
         description = "Updates an existing comment with the provided details. Only the comment content can be modified. The comment ID must exist.",
@@ -116,8 +116,12 @@ public class RestCommentController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<SuccessResponse<ResponseCommentDTO>> updateComment(@Valid @RequestBody UpdateCommentDTO dto) {
-        return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Comment updated successfully", new ResponseCommentDTO(commentService.update(dto))));
+    public ResponseEntity<SuccessResponse<ResponseCommentDTO>> updateComment(
+            @Parameter(description = "ID of the comment to update", required = true, example = "1")
+            @PathVariable Integer id,
+            @Valid @RequestBody UpdateCommentDTO dto
+    ) {
+        return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Comment updated successfully", new ResponseCommentDTO(commentService.update(dto.withId(id)))));
     }
     @DeleteMapping("/{id}")
     @Operation(

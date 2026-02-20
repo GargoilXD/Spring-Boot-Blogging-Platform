@@ -20,6 +20,7 @@ public class Post {
     private Integer id;
 
     @Column(name = "user_id", nullable = false)
+//    @ManyToOne()
     private Integer userId;
 
     @Column(name = "title", nullable = false)

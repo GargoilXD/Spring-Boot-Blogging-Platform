@@ -104,7 +104,7 @@ public class RestPostController {
         ResponsePostDTO response = new ResponsePostDTO(postService.save(createDTO));
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse<>(HttpStatus.CREATED, "Post created successfully", response));
     }
-    @PutMapping
+    @PutMapping("/{id}")
     @Operation(
         summary = "Update post",
         description = "Updates an existing blog post with the provided details. Only the specified fields will be updated. The post ID must exist.",
@@ -131,8 +131,12 @@ public class RestPostController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<SuccessResponse<ResponsePostDTO>> updatePost(@Valid @RequestBody UpdatePostDTO updateDTO) {
-        ResponsePostDTO response = new ResponsePostDTO(postService.update(updateDTO));
+    public ResponseEntity<SuccessResponse<ResponsePostDTO>> updatePost(
+            @Parameter(description = "ID of the post to update", required = true, example = "1")
+            @PathVariable Integer id,
+            @Valid @RequestBody UpdatePostDTO updateDTO
+    ) {
+        ResponsePostDTO response = new ResponsePostDTO(postService.update(updateDTO.withId(id)));
         return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Post updated successfully", response))   ;
     }
     @DeleteMapping("/{id}")

@@ -2,12 +2,14 @@ package com.blog.Config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 
 @Configuration
 @EnableTransactionManagement
+@EnableWebSecurity
 public class AppConfig {
 	@Bean
 	public CacheManager cacheManager() {
