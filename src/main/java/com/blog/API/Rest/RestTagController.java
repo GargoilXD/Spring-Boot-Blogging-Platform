@@ -101,10 +101,11 @@ public class RestTagController {
         )
     })
     public ResponseEntity<SuccessResponse<Void>> setPostTags(@Valid @RequestBody PostTagsDTO DTO) {
+        if (DTO.postId() == null || DTO.postId() <= 0) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new SuccessResponse<>(HttpStatus.BAD_REQUEST, "Invalid post ID"));
         tagService.setPostTags(DTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse<>(HttpStatus.CREATED, "Tags set successfully"));
     }
-    @PutMapping("/add")
+    @PutMapping("/add/{postId}")
     @Operation(
         summary = "Add tags to post",
         description = "Adds new tags to a specific post. Existing tags are preserved. Duplicate tags will be ignored.",
@@ -131,11 +132,15 @@ public class RestTagController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<SuccessResponse<Void>> addTagsToPost(@Valid @RequestBody PostTagsDTO DTO) {
-        tagService.addTagsToPost(DTO);
+    public ResponseEntity<SuccessResponse<Void>> addTagsToPost(
+        @Parameter(description = "ID of the post to add tags to", required = true, example = "1")
+        @PathVariable @Min(1) Integer postId,
+        @Valid @RequestBody PostTagsDTO DTO
+    ) {
+        tagService.addTagsToPost(DTO.withId(postId));
         return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Tags added successfully"));
     }
-    @PutMapping("/remove")
+    @PutMapping("/remove/{postId}")
     @Operation(
         summary = "Remove tags from post",
         description = "Removes specified tags from a specific post. Only the tags in the request will be removed; other tags remain unchanged.",
@@ -162,8 +167,12 @@ public class RestTagController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<SuccessResponse<Void>> removeTagsFromPost(@Valid @RequestBody PostTagsDTO DTO) {
-        tagService.removeTagsFromPost(DTO);
+    public ResponseEntity<SuccessResponse<Void>> removeTagsFromPost(
+            @Parameter(description = "ID of the post to remove tags from", required = true, example = "1")
+            @PathVariable @Min(1) Integer postId,
+            @Valid @RequestBody PostTagsDTO DTO
+    ) {
+        tagService.removeTagsFromPost(DTO.withId(postId));
         return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Tags removed successfully"));
     }
     @DeleteMapping("/{postId}")

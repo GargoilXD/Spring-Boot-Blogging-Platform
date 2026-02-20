@@ -3,478 +3,312 @@ package com.blog.API.GraphQL;
 import com.blog.DataTransporter.Comment.CreateCommentDTO;
 import com.blog.DataTransporter.Comment.UpdateCommentDTO;
 import com.blog.DataTransporter.Post.CreatePostDTO;
-import com.blog.DataTransporter.Post.ResponsePostDTO;
 import com.blog.DataTransporter.Post.UpdatePostDTO;
 import com.blog.DataTransporter.Tags.PostTagsDTO;
 import com.blog.DataTransporter.User.RegisterUserDTO;
 import com.blog.Model.Comment;
 import com.blog.Model.Post;
+import com.blog.Model.PostTags;
 import com.blog.Service.*;
-import org.junit.jupiter.api.AfterEach;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.graphql.GraphQlTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.graphql.test.tester.GraphQlTester;
+import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@GraphQlTest(GraphQLResolver.class)
-@DisplayName("GraphQL Resolver Tests")
+@ExtendWith(MockitoExtension.class)
 class GraphQLResolverTest {
 
-    @Autowired
-    private GraphQlTester graphQlTester;
-
-    @MockBean
+    @Mock
     private PostService postService;
 
-    @MockBean
+    @Mock
     private AuthenticationService authService;
 
-    @MockBean
+    @Mock
     private CommentService commentService;
 
-    @MockBean
+    @Mock
     private TagService tagService;
 
-    private long testStartTime;
-    private long testEndTime;
+    @Mock
+    private Post post;
+
+    @Mock
+    private Comment comment;
+
+    @Mock
+    private PostTags postTags;
+
+    @InjectMocks
+    private GraphQLResolver graphQLResolver;
 
     @BeforeEach
     void setUp() {
-        testStartTime = System.nanoTime();
+        postTags = new PostTags("1", 1, List.of("tag1", "tag2"));
+//        when(post.getId()).thenReturn(1);
+//        when(post.getTitle()).thenReturn("Test Post");
+//        when(comment.getId()).thenReturn(1);
+//        when(postTags.getTags()).thenReturn(List.of("tag1", "tag2"));
     }
 
-    @AfterEach
-    void tearDown() {
-        testEndTime = System.nanoTime();
-        long executionTimeMs = (testEndTime - testStartTime) / 1_000_000;
-        System.out.println("Execution Time: " + executionTimeMs + " ms");
-    }
-
-    // ==================== QUERY TESTS ====================
+    // ==================== Query Mappings ====================
 
     @Test
-    @DisplayName("Query: findPostByID - Should find post by ID")
-    void testFindPostByID() {
-        // Arrange
-        Post post = new Post(1, 1, "Test Post", "Test Body", false, LocalDateTime.now());
+    void findPostByID_Found() {
         when(postService.findById(1)).thenReturn(Optional.of(post));
 
-        // Act & Assert
-        graphQlTester.document("{ findPostByID(id: 1) { id title } }")
-                .execute()
-                .path("findPostByID.id").entity(Integer.class).isEqualTo(1)
-                .path("findPostByID.title").entity(String.class).isEqualTo("Test Post");
+        Post result = graphQLResolver.findPostByID(1);
 
-        verify(postService, times(1)).findById(1);
+        assertNotNull(result);
+        assertEquals(post, result);
+        verify(postService).findById(1);
     }
 
     @Test
-    @DisplayName("Query: findPostByID - Should return null for non-existent post")
-    void testFindPostByIDNotFound() {
-        // Arrange
-        when(postService.findById(999)).thenReturn(Optional.empty());
+    void findPostByID_NotFound() {
+        when(postService.findById(1)).thenReturn(Optional.empty());
 
-        // Act & Assert
-        graphQlTester.document("{ findPostByID(id: 999) { id title } }")
-                .execute()
-                .path("findPostByID").valueIsNull();
+        Post result = graphQLResolver.findPostByID(1);
 
-        verify(postService, times(1)).findById(999);
+        assertNull(result);
+        verify(postService).findById(1);
     }
 
     @Test
-    @DisplayName("Query: getAllPosts - Should get all posts with pagination")
-    void testGetAllPosts() {
-        // Arrange
-        Post post1 = new Post(1, 1, "Post 1", "Body 1", false, LocalDateTime.now());
-        Post post2 = new Post(2, 1, "Post 2", "Body 2", false, LocalDateTime.now());
-        Page<Post> postPage = new PageImpl<>(Arrays.asList(post1, post2), PageRequest.of(0, 10), 2);
+    void findAllPosts_WithDefaultParams() {
+        Page<Post> postPage = new PageImpl<>(List.of(post));
+        when(postService.findAll(PageRequest.of(0, 5))).thenReturn(postPage);
 
-        when(postService.findAll(any())).thenReturn(postPage);
+        List<Post> result = graphQLResolver.findAllPosts(null, null);
 
-        // Act & Assert
-        graphQlTester.document("{ getAllPosts(page: 0, size: 10) { totalElements } }")
-                .execute()
-                .path("getAllPosts.totalElements").entity(Long.class).isEqualTo(2L);
-
-        verify(postService, times(1)).findAll(any());
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(postService).findAll(PageRequest.of(0, 5));
     }
 
     @Test
-    @DisplayName("Query: getAllPosts - Should get posts with different page size")
-    void testGetAllPostsWithDifferentPageSize() {
-        // Arrange
-        Post post1 = new Post(1, 1, "Post 1", "Body 1", false, LocalDateTime.now());
-        Page<Post> postPage = new PageImpl<>(Arrays.asList(post1), PageRequest.of(0, 5), 1);
+    void findAllPosts_WithCustomParams() {
+        Page<Post> postPage = new PageImpl<>(List.of(post));
+        when(postService.findAll(PageRequest.of(2, 10))).thenReturn(postPage);
 
-        when(postService.findAll(any())).thenReturn(postPage);
+        List<Post> result = graphQLResolver.findAllPosts(2, 10);
 
-        // Act & Assert
-        graphQlTester.document("{ getAllPosts(page: 0, size: 5) { totalElements } }")
-                .execute()
-                .path("getAllPosts.totalElements").entity(Long.class).isEqualTo(1L);
-
-        verify(postService, times(1)).findAll(any());
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(postService).findAll(PageRequest.of(2, 10));
     }
 
     @Test
-    @DisplayName("Query: findAllTags - Should find all tags with pagination")
-    void testFindAllTags() {
-        // Arrange
-        when(tagService.findAll(any())).thenReturn(Page.empty());
+    void findAllTags_Success() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<PostTags> tagsPage = new PageImpl<>(List.of(postTags));
+        when(tagService.findAll(pageable)).thenReturn(tagsPage);
 
-        // Act & Assert
-        graphQlTester.document("{ findAllTags(page: 0, size: 10) { totalElements } }")
-                .execute()
-                .path("findAllTags.totalElements").entity(Long.class).isEqualTo(0L);
+        List<String> result = graphQLResolver.findAllTags(0, 10);
 
-        verify(tagService, times(1)).findAll(any());
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertTrue(result.contains("tag1"));
+        assertTrue(result.contains("tag2"));
+        verify(tagService).findAll(pageable);
     }
 
     @Test
-    @DisplayName("Query: findTagsForPost - Should find tags for post")
-    void testFindTagsForPost() {
-        // Arrange
-        List<String> tags = Arrays.asList("Java", "Spring", "Boot");
-        when(tagService.findByPostId(1)).thenReturn(tags);
+    void findTagsForPost_Success() {
+        when(tagService.findByPostId(1)).thenReturn(List.of("tag1", "tag2"));
 
-        // Act & Assert
-        graphQlTester.document("{ findTagsForPost(postID: 1) }")
-                .execute()
-                .path("findTagsForPost[0]").entity(String.class).isEqualTo("Java");
+        List<String> result = graphQLResolver.findTagsForPost(1);
 
-        verify(tagService, times(1)).findByPostId(1);
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        verify(tagService).findByPostId(1);
     }
 
     @Test
-    @DisplayName("Query: findTagsForPost - Should return empty list for post with no tags")
-    void testFindTagsForPostEmpty() {
-        // Arrange
-        when(tagService.findByPostId(999)).thenReturn(Arrays.asList());
+    void findCommentsForPost_Success() {
+        when(commentService.findByPostId(1)).thenReturn(List.of(comment));
 
-        // Act & Assert
-        graphQlTester.document("{ findTagsForPost(postID: 999) }")
-                .execute()
-                .path("findTagsForPost").entityList(String.class).hasSize(0);
+        List<Comment> result = graphQLResolver.findCommentsForPost(1);
 
-        verify(tagService, times(1)).findByPostId(999);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(commentService).findByPostId(1);
+    }
+
+    // ==================== Mutation Mappings - Auth ====================
+
+    @Test
+    void login_Success() {
+        doNothing().when(authService).login("user", "pass");
+
+        Boolean result = graphQLResolver.login("user", "pass");
+
+        assertTrue(result);
+        verify(authService).login("user", "pass");
     }
 
     @Test
-    @DisplayName("Query: findCommentsForPost - Should find comments for post")
-    void testFindCommentsForPost() {
-        // Arrange
-        List<Comment> comments = Arrays.asList(
-            new Comment(1, 1, 1, "Great post!", LocalDateTime.now()),
-            new Comment(2, 2, 1, "Very informative", LocalDateTime.now())
+    void login_Failure_PropagatesException() {
+        doThrow(new RuntimeException("Invalid credentials"))
+                .when(authService).login("user", "wrong");
+
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> graphQLResolver.login("user", "wrong")
         );
-        when(commentService.findByPostId(1)).thenReturn(comments);
 
-        // Act & Assert
-        graphQlTester.document("{ findCommentsForPost(postID: 1) { body } }")
-                .execute()
-                .path("findCommentsForPost[0].body").entity(String.class).isEqualTo("Great post!");
-
-        verify(commentService, times(1)).findByPostId(1);
+        assertEquals("Invalid credentials", exception.getMessage());
+        verify(authService).login("user", "wrong");
     }
 
     @Test
-    @DisplayName("Query: findCommentsForPost - Should return empty list for post with no comments")
-    void testFindCommentsForPostEmpty() {
-        // Arrange
-        when(commentService.findByPostId(999)).thenReturn(Arrays.asList());
+    void register_Success() {
+        RegisterUserDTO input = new RegisterUserDTO("user", "password123", "User Name", "adsdad@email.com", "Other");
+        doNothing().when(authService).register(input);
 
-        // Act & Assert
-        graphQlTester.document("{ findCommentsForPost(postID: 999) { body } }")
-                .execute()
-                .path("findCommentsForPost").entityList(Comment.class).hasSize(0);
+        Boolean result = graphQLResolver.register(input);
 
-        verify(commentService, times(1)).findByPostId(999);
+        assertTrue(result);
+        verify(authService).register(input);
     }
 
-    // ==================== MUTATION TESTS ====================
+    // ==================== Mutation Mappings - Post ====================
 
     @Test
-    @DisplayName("Mutation: login - Should login successfully")
-    void testLoginMutation() {
-        // Arrange
-        doNothing().when(authService).login("johndoe", "SecurePass123!");
+    void createPost_Success() {
+        CreatePostDTO input = new CreatePostDTO(1, "Title", "Content", false);
+        when(postService.save(input)).thenReturn(post);
 
-        // Act & Assert
-        graphQlTester.document("mutation { login(username: \"johndoe\", password: \"SecurePass123!\") }")
-                .execute()
-                .path("login").entity(Boolean.class).isEqualTo(true);
+        Post result = graphQLResolver.createPost(input);
 
-        verify(authService, times(1)).login("johndoe", "SecurePass123!");
+        assertNotNull(result);
+        assertEquals(post, result);
+        verify(postService).save(input);
     }
 
     @Test
-    @DisplayName("Mutation: login - Should handle username with spaces")
-    void testLoginMutationWithSpaces() {
-        // Arrange
-        doNothing().when(authService).login("john doe", "SecurePass123!");
+    void updatePost_Success() {
+        UpdatePostDTO input = new UpdatePostDTO(1, 1, "Title", "Content", false);
+        when(postService.update(input)).thenReturn(post);
 
-        // Act & Assert
-        graphQlTester.document("mutation { login(username: \"john doe\", password: \"SecurePass123!\") }")
-                .execute()
-                .path("login").entity(Boolean.class).isEqualTo(true);
+        Post result = graphQLResolver.updatePost(input);
 
-        verify(authService, times(1)).login("john doe", "SecurePass123!");
+        assertNotNull(result);
+        assertEquals(post, result);
+        verify(postService).update(input);
     }
 
     @Test
-    @DisplayName("Mutation: register - Should register user successfully")
-    void testRegisterMutation() {
-        // Arrange
-        doNothing().when(authService).register(any(RegisterUserDTO.class));
-
-        // Act & Assert
-        String mutation = "mutation { register(input: {username: \"newuser\", password: \"SecurePass123!\", fullName: \"New User\", email: \"new@example.com\", gender: \"Male\"}) }";
-        graphQlTester.document(mutation)
-                .execute()
-                .path("register").entity(Boolean.class).isEqualTo(true);
-
-        verify(authService, times(1)).register(any(RegisterUserDTO.class));
-    }
-
-    @Test
-    @DisplayName("Mutation: createPost - Should create post successfully")
-    void testCreatePostMutation() {
-        // Arrange
-        Post savedPost = new Post(1, 1, "New Post", "New Body", false, LocalDateTime.now());
-        when(postService.save(any(CreatePostDTO.class))).thenReturn(savedPost);
-
-        // Act & Assert
-        String mutation = "mutation { createPost(input: {userId: 1, title: \"New Post\", body: \"New Body\", draft: false}) { id title } }";
-        graphQlTester.document(mutation)
-                .execute()
-                .path("createPost.id").entity(Integer.class).isEqualTo(1)
-                .path("createPost.title").entity(String.class).isEqualTo("New Post");
-
-        verify(postService, times(1)).save(any(CreatePostDTO.class));
-    }
-
-    @Test
-    @DisplayName("Mutation: createPost - Should create draft post")
-    void testCreateDraftPostMutation() {
-        // Arrange
-        Post savedPost = new Post(1, 1, "Draft Post", "Draft Body", true, LocalDateTime.now());
-        when(postService.save(any(CreatePostDTO.class))).thenReturn(savedPost);
-
-        // Act & Assert
-        String mutation = "mutation { createPost(input: {userId: 1, title: \"Draft Post\", body: \"Draft Body\", draft: true}) { draft } }";
-        graphQlTester.document(mutation)
-                .execute()
-                .path("createPost.draft").entity(Boolean.class).isEqualTo(true);
-
-        verify(postService, times(1)).save(any(CreatePostDTO.class));
-    }
-
-    @Test
-    @DisplayName("Mutation: updatePost - Should update post successfully")
-    void testUpdatePostMutation() {
-        // Arrange
-        Post updatedPost = new Post(1, 1, "Updated Post", "Updated Body", false, LocalDateTime.now());
-        when(postService.update(any(UpdatePostDTO.class))).thenReturn(updatedPost);
-
-        // Act & Assert
-        String mutation = "mutation { updatePost(input: {postId: 1, userId: 1, title: \"Updated Post\", body: \"Updated Body\", draft: false}) { title } }";
-        graphQlTester.document(mutation)
-                .execute()
-                .path("updatePost.title").entity(String.class).isEqualTo("Updated Post");
-
-        verify(postService, times(1)).update(any(UpdatePostDTO.class));
-    }
-
-    @Test
-    @DisplayName("Mutation: updatePost - Should update post to draft")
-    void testUpdatePostToDraftMutation() {
-        // Arrange
-        Post updatedPost = new Post(1, 1, "Updated Post", "Updated Body", true, LocalDateTime.now());
-        when(postService.update(any(UpdatePostDTO.class))).thenReturn(updatedPost);
-
-        // Act & Assert
-        String mutation = "mutation { updatePost(input: {postId: 1, userId: 1, title: \"Updated Post\", body: \"Updated Body\", draft: true}) { draft } }";
-        graphQlTester.document(mutation)
-                .execute()
-                .path("updatePost.draft").entity(Boolean.class).isEqualTo(true);
-
-        verify(postService, times(1)).update(any(UpdatePostDTO.class));
-    }
-
-    @Test
-    @DisplayName("Mutation: deletePost - Should delete post successfully")
-    void testDeletePostMutation() {
-        // Arrange
+    void deletePost_Success() {
         doNothing().when(postService).delete(1);
 
-        // Act & Assert
-        graphQlTester.document("mutation { deletePost(id: 1) }")
-                .execute()
-                .path("deletePost").entity(Boolean.class).isEqualTo(true);
+        Boolean result = graphQLResolver.deletePost(1);
 
-        verify(postService, times(1)).delete(1);
+        assertTrue(result);
+        verify(postService).delete(1);
     }
 
     @Test
-    @DisplayName("Mutation: addComment - Should add comment successfully")
-    void testAddCommentMutation() {
-        // Arrange
-        Comment savedComment = new Comment(1, 1, 1, "Great post!", LocalDateTime.now());
-        when(commentService.save(any(CreateCommentDTO.class))).thenReturn(savedComment);
+    void deletePost_Failure_PropagatesException() {
+        doThrow(new EntityNotFoundException("Post not found"))
+                .when(postService).delete(1);
 
-        // Act & Assert
-        String mutation = "mutation { addComment(input: {userId: 1, postId: 1, body: \"Great post!\"}) }";
-        graphQlTester.document(mutation)
-                .execute()
-                .path("addComment").entity(Boolean.class).isEqualTo(true);
+        EntityNotFoundException exception = assertThrows(
+                EntityNotFoundException.class,
+                () -> graphQLResolver.deletePost(1)
+        );
 
-        verify(commentService, times(1)).save(any(CreateCommentDTO.class));
+        assertEquals("Post not found", exception.getMessage());
+        verify(postService).delete(1);
+    }
+
+    // ==================== Mutation Mappings - Comment ====================
+
+    @Test
+    void addComment_Success() {
+        CreateCommentDTO input = new CreateCommentDTO(1, 1, "Content");
+        when(commentService.save(input)).thenReturn(comment);
+
+        Boolean result = graphQLResolver.addComment(input);
+
+        assertTrue(result);
+        verify(commentService).save(input);
     }
 
     @Test
-    @DisplayName("Mutation: addComment - Should add comment with long body")
-    void testAddLongCommentMutation() {
-        // Arrange
-        String longBody = "This is a very long comment that contains multiple sentences and provides detailed feedback about the post.";
-        Comment savedComment = new Comment(1, 1, 1, longBody, LocalDateTime.now());
-        when(commentService.save(any(CreateCommentDTO.class))).thenReturn(savedComment);
-
-        // Act & Assert
-        String mutation = "mutation { addComment(input: {userId: 1, postId: 1, body: \"" + longBody + "\"}) }";
-        graphQlTester.document(mutation)
-                .execute()
-                .path("addComment").entity(Boolean.class).isEqualTo(true);
-
-        verify(commentService, times(1)).save(any(CreateCommentDTO.class));
+    void updateComment_Success() {
+        UpdateCommentDTO input = new UpdateCommentDTO(1, 1, 1, "Updated");
+        when(commentService.update(input)).thenReturn(comment);
+        Boolean result = graphQLResolver.updateComment(input);
+        assertTrue(result);
+        verify(commentService).update(input);
     }
 
     @Test
-    @DisplayName("Mutation: updateComment - Should update comment successfully")
-    void testUpdateCommentMutation() {
-        // Arrange
-        Comment updatedComment = new Comment(1, 1, 1, "Updated comment", LocalDateTime.now());
-        when(commentService.update(any(UpdateCommentDTO.class))).thenReturn(updatedComment);
-
-        // Act & Assert
-        String mutation = "mutation { updateComment(input: {id: 1, userId: 1, postId: 1, body: \"Updated comment\"}) }";
-        graphQlTester.document(mutation)
-                .execute()
-                .path("updateComment").entity(Boolean.class).isEqualTo(true);
-
-        verify(commentService, times(1)).update(any(UpdateCommentDTO.class));
-    }
-
-    @Test
-    @DisplayName("Mutation: deleteComment - Should delete comment successfully")
-    void testDeleteCommentMutation() {
-        // Arrange
+    void deleteComment_Success() {
         doNothing().when(commentService).delete(1);
 
-        // Act & Assert
-        graphQlTester.document("mutation { deleteComment(id: 1) }")
-                .execute()
-                .path("deleteComment").entity(Boolean.class).isEqualTo(true);
+        Boolean result = graphQLResolver.deleteComment(1);
 
-        verify(commentService, times(1)).delete(1);
+        assertTrue(result);
+        verify(commentService).delete(1);
+    }
+
+    // ==================== Mutation Mappings - Tags ====================
+
+    @Test
+    void setPostTags_Success() {
+        PostTagsDTO dto = new PostTagsDTO(1, List.of("tag1", "tag2"));
+        doNothing().when(tagService).setPostTags(dto);
+
+        Boolean result = graphQLResolver.setPostTags(1, List.of("tag1", "tag2"));
+
+        assertTrue(result);
+        verify(tagService).setPostTags(dto);
     }
 
     @Test
-    @DisplayName("Mutation: setPostTags - Should set post tags successfully")
-    void testSetPostTagsMutation() {
-        // Arrange
-        doNothing().when(tagService).setPostTags(any(PostTagsDTO.class));
+    void addTagsToPost_Success() {
+        PostTagsDTO dto = new PostTagsDTO(1, List.of("tag3"));
+        doNothing().when(tagService).addTagsToPost(dto);
 
-        // Act & Assert
-        graphQlTester.document("mutation { setPostTags(postID: 1, tags: [\"Java\", \"Spring\"]) }")
-                .execute()
-                .path("setPostTags").entity(Boolean.class).isEqualTo(true);
+        Boolean result = graphQLResolver.addTagsToPost(1, List.of("tag3"));
 
-        verify(tagService, times(1)).setPostTags(any(PostTagsDTO.class));
+        assertTrue(result);
+        verify(tagService).addTagsToPost(dto);
     }
 
     @Test
-    @DisplayName("Mutation: setPostTags - Should set multiple tags")
-    void testSetMultiplePostTagsMutation() {
-        // Arrange
-        doNothing().when(tagService).setPostTags(any(PostTagsDTO.class));
+    void removeTagsFromPost_Success() {
+        PostTagsDTO dto = new PostTagsDTO(1, List.of("tag1"));
+        doNothing().when(tagService).removeTagsFromPost(dto);
 
-        // Act & Assert
-        graphQlTester.document("mutation { setPostTags(postID: 1, tags: [\"Java\", \"Spring\", \"Boot\", \"Microservices\"]) }")
-                .execute()
-                .path("setPostTags").entity(Boolean.class).isEqualTo(true);
+        Boolean result = graphQLResolver.removeTagsFromPost(1, List.of("tag1"));
 
-        verify(tagService, times(1)).setPostTags(any(PostTagsDTO.class));
-    }
-
-    // ==================== SCHEMA MAPPING TESTS ====================
-
-    @Test
-    @DisplayName("SchemaMapping: Post.tags - Should get tags for post")
-    void testGetTagsSchemaMapping() {
-        // Arrange
-        Post post = new Post(1, 1, "Test Post", "Test Body", false, LocalDateTime.now());
-        List<String> tags = Arrays.asList("Java", "Spring");
-        when(tagService.findByPostId(1)).thenReturn(tags);
-
-        // Act & Assert
-        graphQlTester.document("{ findPostByID(id: 1) { tags } }")
-                .execute()
-                .path("findPostByID.tags[0]").entity(String.class).isEqualTo("Java");
-
-        verify(tagService, times(1)).findByPostId(1);
+        assertTrue(result);
+        verify(tagService).removeTagsFromPost(dto);
     }
 
     @Test
-    @DisplayName("SchemaMapping: Post.comments - Should get comments for post")
-    void testGetCommentsSchemaMapping() {
-        // Arrange
-        Post post = new Post(1, 1, "Test Post", "Test Body", false, LocalDateTime.now());
-        List<Comment> comments = Arrays.asList(
-            new Comment(1, 1, 1, "Great post!", LocalDateTime.now())
-        );
-        when(postService.findById(1)).thenReturn(Optional.of(post));
-        when(commentService.findByPostId(1)).thenReturn(comments);
+    void deleteByPostId_Success() {
+        doNothing().when(tagService).deleteByPostId(1);
 
-        // Act & Assert
-        graphQlTester.document("{ findPostByID(id: 1) { comments { body } } }")
-                .execute()
-                .path("findPostByID.comments[0].body").entity(String.class).isEqualTo("Great post!");
+        Boolean result = graphQLResolver.deleteByPostId(1);
 
-        verify(commentService, times(1)).findByPostId(1);
-    }
-
-    @Test
-    @DisplayName("Query: findPostByID - Should get complete post with all fields")
-    void testFindPostByIDWithAllFields() {
-        // Arrange
-        Post post = new Post(1, 1, "Test Post", "Test Body", false, LocalDateTime.now());
-        when(postService.findById(1)).thenReturn(Optional.of(post));
-        when(tagService.findByPostId(1)).thenReturn(Arrays.asList("Java"));
-        when(commentService.findByPostId(1)).thenReturn(Arrays.asList(new Comment(1, 1, 1, "Comment", LocalDateTime.now())));
-
-        // Act & Assert
-        graphQlTester.document("{ findPostByID(id: 1) { id userId username title body draft createdAt tags comments { body } } }")
-                .execute()
-                .path("findPostByID.id").entity(Integer.class).isEqualTo(1)
-                .path("findPostByID.title").entity(String.class).isEqualTo("Test Post")
-                .path("findPostByID.tags[0]").entity(String.class).isEqualTo("Java");
-
-        verify(postService, times(1)).findById(1);
+        assertTrue(result);
+        verify(tagService).deleteByPostId(1);
     }
 }

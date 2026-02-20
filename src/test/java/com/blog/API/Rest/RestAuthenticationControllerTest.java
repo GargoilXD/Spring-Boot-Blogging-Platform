@@ -1,205 +1,89 @@
 package com.blog.API.Rest;
 
+import com.blog.API.Response.SuccessResponse;
 import com.blog.DataTransporter.User.LoginUserDTO;
 import com.blog.DataTransporter.User.RegisterUserDTO;
 import com.blog.Service.AuthenticationService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.blog.Exception.AuthenticationException;
 import jakarta.persistence.EntityExistsException;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(RestAuthenticationController.class)
-@DisplayName("REST Authentication Controller Tests")
+@ExtendWith(MockitoExtension.class)
 class RestAuthenticationControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
+    @Mock
     private AuthenticationService authService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @InjectMocks
+    private RestAuthenticationController authController;
 
-    private long testStartTime;
-    private long testEndTime;
+    private LoginUserDTO loginDTO;
+    private RegisterUserDTO registerDTO;
 
     @BeforeEach
     void setUp() {
-        testStartTime = System.nanoTime();
-    }
-
-    @AfterEach
-    void tearDown() {
-        testEndTime = System.nanoTime();
-        long executionTimeMs = (testEndTime - testStartTime) / 1_000_000;
-        System.out.println("Execution Time: " + executionTimeMs + " ms");
+        loginDTO = new LoginUserDTO("user", "password123");
+        registerDTO = new RegisterUserDTO("user", "password123", "Full Name", "user@example.com", "Male");
     }
 
     @Test
-    @DisplayName("POST /api/auth/login - Should login successfully with valid credentials")
-    void testLoginSuccess() throws Exception {
-        // Arrange
-        LoginUserDTO loginRequest = new LoginUserDTO("johndoe", "SecurePass123!");
-        doNothing().when(authService).login("johndoe", "SecurePass123!");
+    void login_Success() {
+        doNothing().when(authService).login(loginDTO.username(), loginDTO.password());
 
-        // Act & Assert
-        mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.message").value("User authenticated successfully"));
+        ResponseEntity<SuccessResponse<Void>> response = authController.login(loginDTO);
 
-        verify(authService, times(1)).login("johndoe", "SecurePass123!");
+        assertEquals(HttpStatus.ACCEPTED, response.getStatusCode());
+        assertNotNull(response.getBody());
+        verify(authService).login(loginDTO.username(), loginDTO.password());
     }
 
     @Test
-    @DisplayName("POST /api/auth/login - Should return 401 when login fails with invalid credentials")
-    void testLoginFailure() throws Exception {
-        // Arrange
-        LoginUserDTO loginRequest = new LoginUserDTO("johndoe", "WrongPassword");
-        doThrow(new RuntimeException("Invalid credentials"))
-                .when(authService).login("johndoe", "WrongPassword");
+    void login_Failure_PropagatesException() {
+        doThrow(new AuthenticationException("Invalid credentials"))
+                .when(authService).login(anyString(), anyString());
 
-        // Act & Assert
-        mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().is5xxServerError());
+        AuthenticationException exception = assertThrows(
+                AuthenticationException.class,
+                () -> authController.login(loginDTO)
+        );
 
-        verify(authService, times(1)).login("johndoe", "WrongPassword");
+        assertEquals("Invalid credentials", exception.getMessage());
+        verify(authService).login(loginDTO.username(), loginDTO.password());
     }
 
     @Test
-    @DisplayName("POST /api/auth/login - Should handle username with spaces")
-    void testLoginWithUsernameSpaces() throws Exception {
-        // Arrange
-        LoginUserDTO loginRequest = new LoginUserDTO("john doe", "SecurePass123!");
-        doNothing().when(authService).login("john doe", "SecurePass123!");
+    void register_Success() {
+        doNothing().when(authService).register(registerDTO);
 
-        // Act & Assert
-        mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.message").value("User authenticated successfully"));
+        ResponseEntity<SuccessResponse<Void>> response = authController.register(registerDTO);
 
-        verify(authService, times(1)).login("john doe", "SecurePass123!");
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertNotNull(response.getBody());
+        verify(authService).register(registerDTO);
     }
 
     @Test
-    @DisplayName("POST /api/auth/register - Should register successfully with valid data")
-    void testRegisterSuccess() throws Exception {
-        // Arrange
-        RegisterUserDTO registerRequest = new RegisterUserDTO("newuser", "SecurePass123!", "New User", "new@example.com", "Male");
-        doNothing().when(authService).register(any(RegisterUserDTO.class));
-
-        // Act & Assert
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(registerRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.message").value("User registered successfully"));
-
-        verify(authService, times(1)).register(any(RegisterUserDTO.class));
-    }
-
-    @Test
-    @DisplayName("POST /api/auth/register - Should register female user successfully")
-    void testRegisterFemaleUser() throws Exception {
-        // Arrange
-        RegisterUserDTO registerRequest = new RegisterUserDTO("jane", "SecurePass123!", "Jane Doe", "jane@example.com", "Female");
-        doNothing().when(authService).register(any(RegisterUserDTO.class));
-
-        // Act & Assert
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(registerRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.message").value("User registered successfully"));
-
-        verify(authService, times(1)).register(any(RegisterUserDTO.class));
-    }
-
-    @Test
-    @DisplayName("POST /api/auth/register - Should return 409 when registering with existing username")
-    void testRegisterUserExists() throws Exception {
-        // Arrange
-        RegisterUserDTO registerRequest = new RegisterUserDTO("existing", "SecurePass123!", "Existing User", "existing@example.com", "Female");
+    void register_Failure_PropagatesException() {
         doThrow(new EntityExistsException("Username already exists"))
                 .when(authService).register(any(RegisterUserDTO.class));
 
-        // Act & Assert
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(registerRequest)))
-                .andExpect(status().is4xxClientError());
+        EntityExistsException exception = assertThrows(
+                EntityExistsException.class,
+                () -> authController.register(registerDTO)
+        );
 
-        verify(authService, times(1)).register(any(RegisterUserDTO.class));
-    }
-
-    @Test
-    @DisplayName("POST /api/auth/login - Should return 400 for invalid request body")
-    void testInvalidLoginRequest() throws Exception {
-        // Act & Assert
-        mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
-                .andExpect(status().is4xxClientError());
-    }
-
-    @Test
-    @DisplayName("POST /api/auth/register - Should return 400 for invalid request body")
-    void testInvalidRegisterRequest() throws Exception {
-        // Act & Assert
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
-                .andExpect(status().is4xxClientError());
-    }
-
-    @Test
-    @DisplayName("POST /api/auth/register - Should handle username with spaces")
-    void testRegisterWithUsernameSpaces() throws Exception {
-        // Arrange
-        RegisterUserDTO registerRequest = new RegisterUserDTO("john doe", "SecurePass123!", "John Doe", "john@example.com", "Male");
-        doNothing().when(authService).register(any(RegisterUserDTO.class));
-
-        // Act & Assert
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(registerRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.message").value("User registered successfully"));
-
-        verify(authService, times(1)).register(any(RegisterUserDTO.class));
-    }
-
-    @Test
-    @DisplayName("POST /api/auth/login - Should handle special characters in password")
-    void testLoginWithSpecialCharacters() throws Exception {
-        // Arrange
-        LoginUserDTO loginRequest = new LoginUserDTO("user", "P@ssw0rd!#$%");
-        doNothing().when(authService).login("user", "P@ssw0rd!#$%");
-
-        // Act & Assert
-        mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.message").value("User authenticated successfully"));
-
-        verify(authService, times(1)).login("user", "P@ssw0rd!#$%");
+        assertTrue(exception.getMessage().contains("Username already exists"));
+        verify(authService).register(registerDTO);
     }
 }

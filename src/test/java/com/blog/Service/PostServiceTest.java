@@ -1,16 +1,14 @@
 package com.blog.Service;
 
-import com.blog.DataTransporter.Post.CreatePostDTO;
-import com.blog.DataTransporter.Post.UpdatePostDTO;
-import com.blog.Model.Post;
 import com.blog.Model.User;
+import com.blog.Model.Post;
 import com.blog.Repository.CommentRepository;
 import com.blog.Repository.PostRepository;
 import com.blog.Repository.UserRepository;
+import com.blog.DataTransporter.Post.CreatePostDTO;
+import com.blog.DataTransporter.Post.UpdatePostDTO;
 import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,22 +19,18 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("PostService Tests")
 class PostServiceTest {
 
     @Mock
-    private PostRepository postRepository;
+    private PostRepository repository;
 
     @Mock
     private UserRepository userRepository;
@@ -47,254 +41,172 @@ class PostServiceTest {
     @Mock
     private TagService tagService;
 
+    @Mock
+    private User user;
+
+    @Mock
+    private Post post;
+
     @InjectMocks
     private PostService postService;
 
-    private long testStartTime;
-    private long testEndTime;
+    private CreatePostDTO createDTO;
+    private UpdatePostDTO updateDTO;
 
     @BeforeEach
     void setUp() {
-        testStartTime = System.nanoTime();
-    }
-
-    @AfterEach
-    void tearDown() {
-        testEndTime = System.nanoTime();
-        long executionTimeMs = (testEndTime - testStartTime) / 1_000_000;
-        System.out.println("Execution Time: " + executionTimeMs + " ms");
+        createDTO = new CreatePostDTO(1, "Title", "Content", false);
+        updateDTO = new UpdatePostDTO(1, 1, "Updated Title", "Updated Content", false);
     }
 
     @Test
-    @DisplayName("Should find post by ID")
-    void testFindPostById() {
-        // Arrange
-        int postId = 1;
-        Post post = new Post(1, 1, "Test Post", "Test body", false, LocalDateTime.now());
+    void findById_Success() {
+        when(repository.findById(1)).thenReturn(Optional.of(post));
 
-        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        Optional<Post> result = postService.findById(1);
 
-        // Act
-        Optional<Post> result = postService.findById(postId);
-
-        // Assert
         assertTrue(result.isPresent());
-        assertEquals("Test Post", result.get().getTitle());
-        verify(postRepository, times(1)).findById(postId);
+        verify(repository).findById(1);
     }
 
     @Test
-    @DisplayName("Should return empty optional when post not found")
-    void testFindPostByIdNotFound() {
-        // Arrange
-        int postId = 999;
+    void findById_NotFound() {
+        when(repository.findById(1)).thenReturn(Optional.empty());
 
-        when(postRepository.findById(postId)).thenReturn(Optional.empty());
+        Optional<Post> result = postService.findById(1);
 
-        // Act
-        Optional<Post> result = postService.findById(postId);
-
-        // Assert
-        assertTrue(result.isEmpty());
-        verify(postRepository, times(1)).findById(postId);
+        assertFalse(result.isPresent());
+        verify(repository).findById(1);
     }
 
     @Test
-    @DisplayName("Should retrieve all posts with pagination")
-    void testFindAllPostsWithPagination() {
-        // Arrange
+    void findAll_Success() {
         Pageable pageable = PageRequest.of(0, 10);
-        List<Post> posts = Arrays.asList(
-            new Post(1, 1, "Post 1", "Body 1", false, LocalDateTime.now()),
-            new Post(2, 1, "Post 2", "Body 2", true, LocalDateTime.now())
-        );
-        Page<Post> page = new PageImpl<>(posts, pageable, 2);
+        Page<Post> postPage = new PageImpl<>(List.of(post));
+        when(repository.findAll(pageable)).thenReturn(postPage);
 
-        when(postRepository.findAll(pageable)).thenReturn(page);
-
-        // Act
         Page<Post> result = postService.findAll(pageable);
 
-        // Assert
         assertNotNull(result);
-        assertEquals(2, result.getTotalElements());
-        assertEquals(0, result.getNumber());
-        verify(postRepository, times(1)).findAll(pageable);
+        assertEquals(1, result.getContent().size());
+        verify(repository).findAll(pageable);
     }
 
     @Test
-    @DisplayName("Should retrieve post count")
-    void testCountPosts() {
-        // Arrange
-        when(postRepository.count()).thenReturn(5L);
+    void count_Success() {
+        when(repository.count()).thenReturn(5L);
 
-        // Act
         long result = postService.count();
 
-        // Assert
         assertEquals(5L, result);
-        verify(postRepository, times(1)).count();
+        verify(repository).count();
     }
 
     @Test
-    @DisplayName("Should successfully create and save a post")
-    void testSavePostSuccess() {
-        // Arrange
-        CreatePostDTO dto = new CreatePostDTO(1, "New Post", "New body content", false);
-        Post savedPost = new Post(1, 1, "New Post", "New body content", false, LocalDateTime.now());
+    void save_Success() {
+        when(userRepository.findById(createDTO.userId())).thenReturn(Optional.of(user));
+        when(repository.save(any(Post.class))).thenReturn(post);
 
-        when(userRepository.findById(1)).thenReturn(Optional.of(new User()));
-        when(postRepository.save(any(Post.class))).thenReturn(savedPost);
+        Post result = postService.save(createDTO);
 
-        // Act
-        Post result = postService.save(dto);
-
-        // Assert
         assertNotNull(result);
-        assertEquals(1, result.getId());
-        assertEquals("New Post", result.getTitle());
-        verify(userRepository, times(1)).findById(1);
-        verify(postRepository, times(1)).save(any(Post.class));
+        verify(userRepository).findById(createDTO.userId());
+        verify(repository).save(any(Post.class));
     }
 
     @Test
-    @DisplayName("Should successfully update an existing post")
-    void testUpdatePostSuccess() {
-        // Arrange
-        UpdatePostDTO dto = new UpdatePostDTO(1, 1, "Updated Post", "Updated body", false);
-        Post existingPost = new Post(1, 1, "Old Post", "Old body", false, LocalDateTime.now());
-        Post updatedPost = new Post(1, 1, "Updated Post", "Updated body", false, LocalDateTime.now());
-        User user = new User(1, "user", "hash", "User", "user@test.com", "M", LocalDateTime.now());
+    void save_Failure_UserNotFound() {
+        when(userRepository.findById(createDTO.userId())).thenReturn(Optional.empty());
 
-        when(postRepository.findById(1)).thenReturn(Optional.of(existingPost));
-        when(userRepository.findById(1)).thenReturn(Optional.of(user));
-        when(postRepository.save(any(Post.class))).thenReturn(updatedPost);
-
-        // Act
-        Post result = postService.update(dto);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals("Updated Post", result.getTitle());
-        verify(postRepository, times(1)).findById(1);
-        verify(userRepository, times(1)).findById(1);
-        verify(postRepository, times(1)).save(any(Post.class));
-    }
-
-    @Test
-    @DisplayName("Should throw exception when updating non-existent post")
-    void testUpdatePostNotFound() {
-        // Arrange
-        UpdatePostDTO dto = new UpdatePostDTO(999, 1, "Updated Post", "Updated body", false);
-
-        when(postRepository.findById(999)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThrows(EntityNotFoundException.class, () -> postService.update(dto));
-
-        verify(postRepository, times(1)).findById(999);
-        verify(postRepository, never()).save(any(Post.class));
-    }
-
-    @Test
-    @DisplayName("Should successfully delete a post")
-    void testDeletePostSuccess() {
-        // Arrange
-        int postId = 1;
-        Post post = new Post(1, 1, "Post to delete", "Body", false, LocalDateTime.now());
-
-        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
-        doNothing().when(tagService).deleteByPostId(postId);
-        doNothing().when(commentRepository).deleteByPostId(postId);
-
-        // Act
-        assertDoesNotThrow(() -> postService.delete(postId));
-
-        // Assert
-        verify(postRepository, times(1)).findById(postId);
-        verify(tagService, times(1)).deleteByPostId(postId);
-        verify(commentRepository, times(1)).deleteByPostId(postId);
-        verify(postRepository, times(1)).deleteById(postId);
-    }
-
-    @Test
-    @DisplayName("Should throw exception when deleting non-existent post")
-    void testDeletePostNotFound() {
-        // Arrange
-        int postId = 999;
-
-        when(postRepository.findById(postId)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThrows(EntityNotFoundException.class, () -> postService.delete(postId));
-
-        verify(postRepository, times(1)).findById(postId);
-        verify(postRepository, never()).deleteById(anyInt());
-    }
-
-    @Test
-    @DisplayName("Should return correct post count after operations")
-    void testPostCountAfterOperations() {
-        // Arrange
-        when(postRepository.count()).thenReturn(10L);
-
-        // Act
-        long result = postService.count();
-
-        // Assert
-        assertEquals(10L, result);
-        verify(postRepository, times(1)).count();
-    }
-
-    @Test
-    @DisplayName("Should handle empty page of posts")
-    void testFindAllPostsEmptyPage() {
-        // Arrange
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<Post> emptyPage = new PageImpl<>(Arrays.asList(), pageable, 0);
-
-        when(postRepository.findAll(pageable)).thenReturn(emptyPage);
-
-        // Act
-        Page<Post> result = postService.findAll(pageable);
-
-        // Assert
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-        assertEquals(0, result.getTotalElements());
-        verify(postRepository, times(1)).findAll(pageable);
-    }
-
-    @Test
-    @DisplayName("Should retrieve posts with different pagination sizes")
-    void testFindAllPostsMultiplePagination() {
-        // Arrange
-        Pageable pageable1 = PageRequest.of(0, 5);
-        Pageable pageable2 = PageRequest.of(1, 5);
-
-        List<Post> page1Posts = Arrays.asList(
-            new Post(1, 1, "Post 1", "Body", false, LocalDateTime.now()),
-            new Post(2, 1, "Post 2", "Body", false, LocalDateTime.now())
+        EntityNotFoundException exception = assertThrows(
+                EntityNotFoundException.class,
+                () -> postService.save(createDTO)
         );
-        Page<Post> page1 = new PageImpl<>(page1Posts, pageable1, 10);
 
-        List<Post> page2Posts = Arrays.asList(
-            new Post(3, 1, "Post 3", "Body", false, LocalDateTime.now()),
-            new Post(4, 1, "Post 4", "Body", false, LocalDateTime.now())
+        assertTrue(exception.getMessage().contains("User not found"));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void update_Success() {
+        when(repository.findById(updateDTO.postId())).thenReturn(Optional.of(post));
+        when(userRepository.findById(updateDTO.userId())).thenReturn(Optional.of(user));
+        when(repository.save(any(Post.class))).thenReturn(post);
+
+        Post result = postService.update(updateDTO);
+
+        assertNotNull(result);
+        verify(repository).save(any(Post.class));
+    }
+
+    @Test
+    void update_Failure_PostNotFound() {
+        when(repository.findById(updateDTO.postId())).thenReturn(Optional.empty());
+
+        EntityNotFoundException exception = assertThrows(
+                EntityNotFoundException.class,
+                () -> postService.update(updateDTO)
         );
-        Page<Post> page2 = new PageImpl<>(page2Posts, pageable2, 10);
 
-        when(postRepository.findAll(pageable1)).thenReturn(page1);
-        when(postRepository.findAll(pageable2)).thenReturn(page2);
+        assertTrue(exception.getMessage().contains("Post not found"));
+        verify(repository, never()).save(any());
+    }
 
-        // Act
-        Page<Post> result1 = postService.findAll(pageable1);
-        Page<Post> result2 = postService.findAll(pageable2);
+    @Test
+    void update_Failure_UserNotFound() {
+        when(repository.findById(updateDTO.postId())).thenReturn(Optional.of(post));
+        when(userRepository.findById(updateDTO.userId())).thenReturn(Optional.empty());
 
-        // Assert
-        assertEquals(2, result1.getContent().size());
-        assertEquals(2, result2.getContent().size());
-        verify(postRepository, times(1)).findAll(pageable1);
-        verify(postRepository, times(1)).findAll(pageable2);
+        EntityNotFoundException exception = assertThrows(
+                EntityNotFoundException.class,
+                () -> postService.update(updateDTO)
+        );
+
+        assertTrue(exception.getMessage().contains("User not found"));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void update_Failure_UserMismatch() {
+        when(repository.findById(updateDTO.postId())).thenReturn(Optional.of(post));
+        when(userRepository.findById(updateDTO.userId())).thenReturn(Optional.of(user));
+        when(post.getUserId()).thenReturn(99);
+
+        EntityNotFoundException exception = assertThrows(
+                EntityNotFoundException.class,
+                () -> postService.update(updateDTO)
+        );
+
+        assertTrue(exception.getMessage().contains("User does not own this post"));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void delete_Success() {
+        when(repository.findById(1)).thenReturn(Optional.of(post));
+        doNothing().when(tagService).deleteByPostId(1);
+        doNothing().when(commentRepository).deleteByPostId(1);
+        doNothing().when(repository).deleteById(1);
+
+        assertDoesNotThrow(() -> postService.delete(1));
+
+        verify(tagService).deleteByPostId(1);
+        verify(commentRepository).deleteByPostId(1);
+        verify(repository).deleteById(1);
+    }
+
+    @Test
+    void delete_Failure_PostNotFound() {
+        when(repository.findById(1)).thenReturn(Optional.empty());
+
+        EntityNotFoundException exception = assertThrows(
+                EntityNotFoundException.class,
+                () -> postService.delete(1)
+        );
+
+        assertTrue(exception.getMessage().contains("Post not found"));
+        verify(tagService, never()).deleteByPostId(anyInt());
+        verify(commentRepository, never()).deleteByPostId(anyInt());
+        verify(repository, never()).deleteById(anyInt());
     }
 }
