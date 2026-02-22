@@ -10,10 +10,10 @@ type Mutation {
     login(username: String!, password: String!): Boolean
     register(input: RegisterInput!): Boolean
     createPost(input: CreatePostInput!): Post
-    updatePost(input: UpdatePostInput!): Post
+    updatePost(id: ID!, input: UpdatePostInput!): Post
     deletePost(id: ID!): Boolean
     addComment(input: CreateCommentInput!): Boolean
-    updateComment(input: UpdateCommentInput!): Boolean
+    updateComment(id: ID!, input: UpdateCommentInput!): Boolean
     deleteComment(id: ID!): Boolean
     setPostTags(postID: ID!, tags: [String!]!): Boolean
     addTagsToPost(postID: ID!, tags: [String!]!): Boolean

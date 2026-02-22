@@ -93,35 +93,33 @@ class RestPostControllerTest {
     @Test
     void updatePost_Success() {
         Integer pathVariableId = 1;
-        UpdatePostDTO dtoWithoutId = new UpdatePostDTO(null, 1, "Title", "Content", false);
-        UpdatePostDTO dtoWithId = new UpdatePostDTO(pathVariableId, 1, "Title", "Content", false);
+        UpdatePostDTO dto = new UpdatePostDTO(1, "Title", "Content", false);
 
-        when(postService.update(dtoWithId)).thenReturn(mockPost);
+        when(postService.update(pathVariableId, dto)).thenReturn(mockPost);
 
         ResponseEntity<SuccessResponse<ResponsePostDTO>> response =
-                postController.updatePost(pathVariableId, dtoWithoutId);
+                postController.updatePost(pathVariableId, dto);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        verify(postService).update(dtoWithId);
+        verify(postService).update(pathVariableId, dto);
     }
 
     @Test
     void updatePost_Failure_PropagatesException() {
         Integer pathVariableId = 1;
-        UpdatePostDTO dtoWithoutId = new UpdatePostDTO(null, 1, "Title", "Content", false);
-        UpdatePostDTO dtoWithId = new UpdatePostDTO(pathVariableId, 1, "Title", "Content", false);
+        UpdatePostDTO dto = new UpdatePostDTO(1, "Title", "Content", false);
 
         doThrow(new EntityNotFoundException("Post not found"))
-                .when(postService).update(dtoWithId);
+                .when(postService).update(pathVariableId, dto);
 
         EntityNotFoundException exception = assertThrows(
                 EntityNotFoundException.class,
-                () -> postController.updatePost(pathVariableId, dtoWithoutId)
+                () -> postController.updatePost(pathVariableId, dto)
         );
 
         assertEquals("Post not found", exception.getMessage());
-        verify(postService).update(dtoWithId);
+        verify(postService).update(pathVariableId, dto);
     }
 
     @Test

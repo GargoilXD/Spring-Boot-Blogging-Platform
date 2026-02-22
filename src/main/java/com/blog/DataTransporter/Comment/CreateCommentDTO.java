@@ -22,6 +22,6 @@ public record CreateCommentDTO(
         body = body.trim();
     }
     public Comment toEntity() {
-        return new Comment(null, userId, postId, body, null);
+        return new Comment(null, null, null, body, null);
     }
 }

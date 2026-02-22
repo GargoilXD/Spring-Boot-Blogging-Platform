@@ -4,12 +4,12 @@ import com.blog.DataTransporter.Comment.CreateCommentDTO;
 import com.blog.DataTransporter.Comment.UpdateCommentDTO;
 import com.blog.DataTransporter.Post.CreatePostDTO;
 import com.blog.DataTransporter.Post.UpdatePostDTO;
-import com.blog.DataTransporter.Tags.PostTagsDTO;
 import com.blog.DataTransporter.User.RegisterUserDTO;
 import com.blog.Model.Comment;
 import com.blog.Model.Post;
 import com.blog.Service.*;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -21,18 +21,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Controller
+@RequiredArgsConstructor
 public class GraphQLResolver {
     private final PostService postService;
     private final AuthenticationService authService;
     private final CommentService commentService;
     private final TagService tagService;
-    
-    public GraphQLResolver(PostService postService, AuthenticationService authService, CommentService commentService, TagService tagService) {
-        this.postService = postService;
-        this.authService = authService;
-        this.commentService = commentService;
-        this.tagService = tagService;
-    }
 
     @QueryMapping
     public Post findPostByID(@Argument @NotNull Integer id) {
@@ -76,8 +70,8 @@ public class GraphQLResolver {
         return postService.save(input);
     }
     @MutationMapping
-    public Post updatePost(@Argument("input") @NotNull UpdatePostDTO input) {
-        return postService.update(input);
+    public Post updatePost(@Argument("id") @NotNull Integer id, @Argument("input") @NotNull UpdatePostDTO input) {
+        return postService.update(id, input);
     }
     @MutationMapping
     public Boolean deletePost(@Argument @NotNull Integer id) {
@@ -91,8 +85,8 @@ public class GraphQLResolver {
         return true;
     }
     @MutationMapping
-    public Boolean updateComment(@Argument("input") @NotNull UpdateCommentDTO input) {
-        commentService.update(input);
+    public Boolean updateComment(@Argument("id") @NotNull Integer id, @Argument("input") @NotNull UpdateCommentDTO input) {
+        commentService.update(id, input);
         return true;
     }
     @MutationMapping
@@ -102,17 +96,17 @@ public class GraphQLResolver {
     }
     @MutationMapping
     public Boolean setPostTags(@Argument @NotNull Integer postID, @Argument @NotNull List<String> tags) {
-        tagService.setPostTags(new PostTagsDTO(postID, tags));
+        tagService.setPostTags(postID, tags);
         return true;
     }
     @MutationMapping
     public Boolean addTagsToPost(@Argument @NotNull Integer postID, @Argument @NotNull List<String> tags) {
-        tagService.addTagsToPost(new PostTagsDTO(postID, tags));
+        tagService.addTagsToPost(postID, tags);
         return true;
     }
     @MutationMapping
     public Boolean removeTagsFromPost(@Argument @NotNull Integer postID, @Argument @NotNull List<String> tags) {
-        tagService.removeTagsFromPost(new PostTagsDTO(postID, tags));
+        tagService.removeTagsFromPost(postID, tags);
         return true;
     }
     @MutationMapping

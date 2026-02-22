@@ -10,35 +10,31 @@ import com.blog.Model.Post;
 import com.blog.Repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Caching;
 
 import java.util.Objects;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class PostService {
     private final PostRepository repository;
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
     private final TagService tagService;
 
-    public PostService(PostRepository repository, UserRepository userRepository, CommentRepository commentRepository, TagService tagService) {
-        this.repository = repository;
-        this.userRepository = userRepository;
-        this.commentRepository = commentRepository;
-        this.tagService = tagService;
-    }
-    @Cacheable(cacheNames = "Post.findById", key = "#ID")
-    public Optional<Post> findById(int ID) {
-        return repository.findById(ID);
+    @Cacheable(cacheNames = "Post.findById", key = "#id")
+    public Optional<Post> findById(int id) {
+        return repository.findById(id);
     }
     @Cacheable(cacheNames = "Post.getAll", key = "{#pageable.pageNumber, #pageable.pageSize, #pageable.sort}")
     public Page<Post> findAll(Pageable pageable) {
@@ -50,27 +46,30 @@ public class PostService {
     }
     @Transactional
     @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true)
-    public Post save(@NotNull CreatePostDTO DTO) {
-        userRepository.findById(DTO.userId()).orElseThrow(() -> new EntityNotFoundException("User not found: " + DTO.userId()));
-        return repository.save(DTO.toEntity());
+    public Post save(@NotNull CreatePostDTO dto) {
+        User user = userRepository.findById(dto.userId()).orElseThrow(() -> new EntityNotFoundException("User not found: " + dto.userId()));
+        Post post = dto.toEntity();
+        user.addPost(post);
+        return repository.save(post);
     }
     @Transactional
     @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true)
-    public Post update(@NotNull UpdatePostDTO DTO) {
-        Post post = repository.findById(DTO.postId()).orElseThrow(() -> new EntityNotFoundException("Post not found: " + DTO.postId()));
-        User user = userRepository.findById(DTO.userId()).orElseThrow(() -> new EntityNotFoundException("User not found: " + DTO.userId()));
-        if (!Objects.equals(post.getUserId(), user.getId())) throw new EntityNotFoundException("User does not own this post: " + DTO.postId());
-        return repository.save(DTO.toEntity());
+    public Post update(@NotNull(message = "Post id is required") @Min(1) Integer postId, @NotNull UpdatePostDTO dto) {
+        Post post = repository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found: " + postId));
+        User user = userRepository.findById(dto.userId()).orElseThrow(() -> new EntityNotFoundException("User not found: " + dto.userId()));
+        if (!Objects.equals(post.getUser().getId(), user.getId())) throw new EntityNotFoundException("User does not own this post: " + postId);
+        dto.update(post);
+        return repository.save(post);
     }
     @Transactional
     @Caching(evict = {
-        @CacheEvict(cacheNames = "Post.findById", key = "#ID"),
+        @CacheEvict(cacheNames = "Post.findById", key = "#id"),
         @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true)
     })
-    public void delete(int ID) {
-        repository.findById(ID).orElseThrow(() -> new EntityNotFoundException("Post not found: " + ID));
-        tagService.deleteByPostId(ID);
-        commentRepository.deleteByPostId(ID);
-        repository.deleteById(ID);
+    public void delete(int id) {
+        repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Post not found: " + id));
+        tagService.deleteByPostId(id);
+        commentRepository.deleteByPostId(id);
+        repository.deleteById(id);
     }
 }

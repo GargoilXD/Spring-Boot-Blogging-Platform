@@ -22,7 +22,7 @@ public record ResponseCommentDTO(
     String body
 ) {
     public ResponseCommentDTO(Comment comment) {
-        this(comment.getId(), comment.getUserId(), comment.getPostId(), comment.getBody());
+        this(comment.getId(), comment.getUser().getId(), comment.getPost().getId(), comment.getBody());
     }
 }
 

@@ -1,7 +1,6 @@
 package com.blog.API.Rest;
 
 import com.blog.API.Response.SuccessResponse;
-import com.blog.DataTransporter.Tags.PostTagsDTO;
 import com.blog.DataTransporter.Tags.ResponseTagsDTO;
 import com.blog.Service.TagService;
 import com.blog.Model.PostTags;
@@ -22,7 +21,6 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -67,130 +65,84 @@ class RestTagControllerTest {
 
     @Test
     void setPostTags_Success() {
-        PostTagsDTO validDTO = new PostTagsDTO(1, List.of("tag1"));
-        doNothing().when(tagService).setPostTags(validDTO);
+        doNothing().when(tagService).setPostTags(1, List.of("tag1", "tag2"));
 
-        ResponseEntity<SuccessResponse<Void>> response = tagController.setPostTags(validDTO);
+        ResponseEntity<SuccessResponse<Void>> response = tagController.setPostTags(1, List.of("tag1", "tag2"));
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
-        verify(tagService).setPostTags(validDTO);
-    }
-
-    @Test
-    void setPostTags_Failure_InvalidPostId_Null() {
-        PostTagsDTO invalidDTO = new PostTagsDTO(null, List.of("tag1"));
-
-        ResponseEntity<SuccessResponse<Void>> response = tagController.setPostTags(invalidDTO);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(response.getBody());
-        verify(tagService, never()).setPostTags(any());
-    }
-
-    @Test
-    void setPostTags_Failure_InvalidPostId_Zero() {
-        PostTagsDTO invalidDTO = new PostTagsDTO(0, List.of("tag1"));
-
-        ResponseEntity<SuccessResponse<Void>> response = tagController.setPostTags(invalidDTO);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(response.getBody());
-        verify(tagService, never()).setPostTags(any());
-    }
-
-    @Test
-    void setPostTags_Failure_InvalidPostId_Negative() {
-        PostTagsDTO invalidDTO = new PostTagsDTO(-1, List.of("tag1"));
-
-        ResponseEntity<SuccessResponse<Void>> response = tagController.setPostTags(invalidDTO);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(response.getBody());
-        verify(tagService, never()).setPostTags(any());
+        verify(tagService).setPostTags(1, List.of("tag1", "tag2"));
     }
 
     @Test
     void setPostTags_Failure_PropagatesException() {
-        PostTagsDTO validDTO = new PostTagsDTO(1, List.of("tag1"));
         doThrow(new EntityNotFoundException("Post not found"))
-                .when(tagService).setPostTags(validDTO);
+                .when(tagService).setPostTags(1, List.of("tag1", "tag2"));
 
         EntityNotFoundException exception = assertThrows(
                 EntityNotFoundException.class,
-                () -> tagController.setPostTags(validDTO)
+                () -> tagController.setPostTags(1, List.of("tag1", "tag2"))
         );
 
         assertEquals("Post not found", exception.getMessage());
-        verify(tagService).setPostTags(validDTO);
+        verify(tagService).setPostTags(1, List.of("tag1", "tag2"));
     }
 
     @Test
     void addTagsToPost_Success() {
         Integer pathVariableId = 1;
-        PostTagsDTO dtoWithoutId = new PostTagsDTO(null, List.of("tag1"));
-        PostTagsDTO dtoWithId = new PostTagsDTO(pathVariableId, List.of("tag1"));
 
-        doNothing().when(tagService).addTagsToPost(dtoWithId);
+        doNothing().when(tagService).addTagsToPost(1, List.of("tag3"));
 
         ResponseEntity<SuccessResponse<Void>> response =
-                tagController.addTagsToPost(pathVariableId, dtoWithoutId);
+                tagController.addTagsToPost(pathVariableId, List.of("tag3"));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        verify(tagService).addTagsToPost(dtoWithId);
+        verify(tagService).addTagsToPost(pathVariableId, List.of("tag3"));
     }
 
     @Test
     void addTagsToPost_Failure_PropagatesException() {
         Integer pathVariableId = 1;
-        PostTagsDTO dtoWithoutId = new PostTagsDTO(null, List.of("tag1"));
-        PostTagsDTO dtoWithId = new PostTagsDTO(pathVariableId, List.of("tag1"));
-
         doThrow(new EntityNotFoundException("Post not found"))
-                .when(tagService).addTagsToPost(dtoWithId);
+                .when(tagService).addTagsToPost(pathVariableId, List.of("tag3"));
 
         EntityNotFoundException exception = assertThrows(
                 EntityNotFoundException.class,
-                () -> tagController.addTagsToPost(pathVariableId, dtoWithoutId)
+                () -> tagController.addTagsToPost(pathVariableId, List.of("tag3"))
         );
 
         assertEquals("Post not found", exception.getMessage());
-        verify(tagService).addTagsToPost(dtoWithId);
+        verify(tagService).addTagsToPost(pathVariableId, List.of("tag3"));
     }
 
     @Test
     void removeTagsFromPost_Success() {
         Integer pathVariableId = 1;
-        PostTagsDTO dtoWithoutId = new PostTagsDTO(null, List.of("tag1"));
-        PostTagsDTO dtoWithId = new PostTagsDTO(pathVariableId, List.of("tag1"));
-
-        doNothing().when(tagService).removeTagsFromPost(dtoWithId);
+        doNothing().when(tagService).removeTagsFromPost(pathVariableId, List.of("tag3"));
 
         ResponseEntity<SuccessResponse<Void>> response =
-                tagController.removeTagsFromPost(pathVariableId, dtoWithoutId);
+                tagController.removeTagsFromPost(pathVariableId, List.of("tag3"));
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        verify(tagService).removeTagsFromPost(dtoWithId);
+        verify(tagService).removeTagsFromPost(pathVariableId, List.of("tag3"));
     }
 
     @Test
     void removeTagsFromPost_Failure_PropagatesException() {
         Integer pathVariableId = 1;
-        PostTagsDTO dtoWithoutId = new PostTagsDTO(null, List.of("tag1"));
-        PostTagsDTO dtoWithId = new PostTagsDTO(pathVariableId, List.of("tag1"));
-
         doThrow(new EntityNotFoundException("Post not found"))
-                .when(tagService).removeTagsFromPost(dtoWithId);
+                .when(tagService).removeTagsFromPost(pathVariableId, List.of("tag3"));
 
         EntityNotFoundException exception = assertThrows(
                 EntityNotFoundException.class,
-                () -> tagController.removeTagsFromPost(pathVariableId, dtoWithoutId)
+                () -> tagController.removeTagsFromPost(pathVariableId, List.of("tag3"))
         );
 
         assertEquals("Post not found", exception.getMessage());
-        verify(tagService).removeTagsFromPost(dtoWithId);
+        verify(tagService).removeTagsFromPost(pathVariableId, List.of("tag3"));
     }
 
     @Test

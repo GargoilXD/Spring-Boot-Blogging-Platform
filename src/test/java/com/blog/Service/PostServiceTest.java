@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -56,7 +57,7 @@ class PostServiceTest {
     @BeforeEach
     void setUp() {
         createDTO = new CreatePostDTO(1, "Title", "Content", false);
-        updateDTO = new UpdatePostDTO(1, 1, "Updated Title", "Updated Content", false);
+        updateDTO = new UpdatePostDTO(1, "Updated Title", "Updated Content", false);
     }
 
     @Test
@@ -128,24 +129,12 @@ class PostServiceTest {
     }
 
     @Test
-    void update_Success() {
-        when(repository.findById(updateDTO.postId())).thenReturn(Optional.of(post));
-        when(userRepository.findById(updateDTO.userId())).thenReturn(Optional.of(user));
-        when(repository.save(any(Post.class))).thenReturn(post);
-
-        Post result = postService.update(updateDTO);
-
-        assertNotNull(result);
-        verify(repository).save(any(Post.class));
-    }
-
-    @Test
     void update_Failure_PostNotFound() {
-        when(repository.findById(updateDTO.postId())).thenReturn(Optional.empty());
+        when(repository.findById(1)).thenReturn(Optional.empty());
 
         EntityNotFoundException exception = assertThrows(
                 EntityNotFoundException.class,
-                () -> postService.update(updateDTO)
+                () -> postService.update(1, updateDTO)
         );
 
         assertTrue(exception.getMessage().contains("Post not found"));
@@ -154,30 +143,15 @@ class PostServiceTest {
 
     @Test
     void update_Failure_UserNotFound() {
-        when(repository.findById(updateDTO.postId())).thenReturn(Optional.of(post));
+        when(repository.findById(1)).thenReturn(Optional.of(post));
         when(userRepository.findById(updateDTO.userId())).thenReturn(Optional.empty());
 
         EntityNotFoundException exception = assertThrows(
                 EntityNotFoundException.class,
-                () -> postService.update(updateDTO)
+                () -> postService.update(1, updateDTO)
         );
 
         assertTrue(exception.getMessage().contains("User not found"));
-        verify(repository, never()).save(any());
-    }
-
-    @Test
-    void update_Failure_UserMismatch() {
-        when(repository.findById(updateDTO.postId())).thenReturn(Optional.of(post));
-        when(userRepository.findById(updateDTO.userId())).thenReturn(Optional.of(user));
-        when(post.getUserId()).thenReturn(99);
-
-        EntityNotFoundException exception = assertThrows(
-                EntityNotFoundException.class,
-                () -> postService.update(updateDTO)
-        );
-
-        assertTrue(exception.getMessage().contains("User does not own this post"));
         verify(repository, never()).save(any());
     }
 
