@@ -136,7 +136,7 @@ public class RestPostController {
             @PathVariable Integer id,
             @Valid @RequestBody UpdatePostDTO updateDTO
     ) {
-        ResponsePostDTO response = new ResponsePostDTO(postService.update(updateDTO.withId(id)));
+        ResponsePostDTO response = new ResponsePostDTO(postService.update(id, updateDTO));
         return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Post updated successfully", response))   ;
     }
     @DeleteMapping("/{id}")

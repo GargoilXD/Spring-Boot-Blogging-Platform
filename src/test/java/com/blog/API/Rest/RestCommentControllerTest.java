@@ -66,36 +66,34 @@ class RestCommentControllerTest {
     @Test
     void updateComment_Success() {
         Integer pathVariableId = 1;
-        UpdateCommentDTO dtoWithoutId = new UpdateCommentDTO(null, 1, 1, "Updated Content");
-        UpdateCommentDTO dtoWithId = new UpdateCommentDTO(pathVariableId, 1, 1, "Updated Content");
+        UpdateCommentDTO dto = new UpdateCommentDTO(1, 1, "Updated Content");
 
-        when(commentService.update(dtoWithId)).thenReturn(mockComment);
+        when(commentService.update(pathVariableId, dto)).thenReturn(mockComment);
 
-        ResponseEntity<SuccessResponse<ResponseCommentDTO>> response = commentController.updateComment(pathVariableId, dtoWithoutId);
+        ResponseEntity<SuccessResponse<ResponseCommentDTO>> response = commentController.updateComment(pathVariableId, dto);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
 
         // Verify the service was called with the DTO that has the ID from path variable
-        verify(commentService).update(dtoWithId);
+        verify(commentService).update(pathVariableId, dto);
     }
 
     @Test
     void updateComment_Failure_PropagatesException() {
         Integer pathVariableId = 1;
-        UpdateCommentDTO dtoWithoutId = new UpdateCommentDTO(null, 1, 1, "Content");
-        UpdateCommentDTO dtoWithId = new UpdateCommentDTO(pathVariableId, 1, 1, "Content");
+        UpdateCommentDTO dto = new UpdateCommentDTO(1, 1, "Content");
 
         doThrow(new EntityNotFoundException("Comment not found"))
-                .when(commentService).update(dtoWithId);
+                .when(commentService).update(pathVariableId, dto);
 
         EntityNotFoundException exception = assertThrows(
                 EntityNotFoundException.class,
-                () -> commentController.updateComment(pathVariableId, dtoWithoutId)
+                () -> commentController.updateComment(pathVariableId, dto)
         );
 
         assertEquals("Comment not found", exception.getMessage());
-        verify(commentService).update(dtoWithId);
+        verify(commentService).update(pathVariableId, dto);
     }
 
     @Test

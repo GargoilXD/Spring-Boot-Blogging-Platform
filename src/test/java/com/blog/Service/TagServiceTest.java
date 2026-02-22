@@ -1,6 +1,5 @@
 package com.blog.Service;
 
-import com.blog.DataTransporter.Tags.PostTagsDTO;
 import com.blog.Model.Post;
 import com.blog.Model.PostTags;
 import com.blog.Repository.PostRepository;
@@ -17,7 +16,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -42,12 +40,12 @@ class TagServiceTest {
     @InjectMocks
     private TagService tagService;
 
-    private PostTagsDTO postTagsDTO;
+    private List<String> tags;
 
     @BeforeEach
     void setUp() {
-        postTagsDTO = new PostTagsDTO(1, List.of("tag1", "tag2"));
-        post = new Post(1, 1, "Title", "Content", false, LocalDateTime.now());
+        tags = List.of("tag1", "tag2");
+//        post = new Post(1, 1, "Title", "Content", false, LocalDateTime.now());
     }
 
     @Test
@@ -100,24 +98,24 @@ class TagServiceTest {
 
     @Test
     void setPostTags_Success() {
-        when(postRepository.findById(postTagsDTO.postId())).thenReturn(Optional.of(post));
-        when(repository.findByPostId(postTagsDTO.postId())).thenReturn(Optional.of(postTags));
+        when(postRepository.findById(1)).thenReturn(Optional.of(post));
+        when(repository.findByPostId(1)).thenReturn(Optional.of(postTags));
         when(repository.save(any(PostTags.class))).thenReturn(postTags);
 
-        assertDoesNotThrow(() -> tagService.setPostTags(postTagsDTO));
+        assertDoesNotThrow(() -> tagService.setPostTags(1, tags));
 
-        verify(postRepository).findById(postTagsDTO.postId());
-        verify(repository).findByPostId(postTagsDTO.postId());
+        verify(postRepository).findById(1);
+        verify(repository).findByPostId(1);
         verify(repository).save(any(PostTags.class));
     }
 
     @Test
     void setPostTags_Failure_PostNotFound() {
-        when(postRepository.findById(postTagsDTO.postId())).thenReturn(Optional.empty());
+        when(postRepository.findById(1)).thenReturn(Optional.empty());
 
         EntityNotFoundException exception = assertThrows(
                 EntityNotFoundException.class,
-                () -> tagService.setPostTags(postTagsDTO)
+                () -> tagService.setPostTags(1, tags)
         );
 
         assertTrue(exception.getMessage().contains("Post not found"));
@@ -126,22 +124,22 @@ class TagServiceTest {
 
     @Test
     void addTagsToPost_Success() {
-        when(postRepository.findById(postTagsDTO.postId())).thenReturn(Optional.of(post));
-        when(repository.findByPostId(postTagsDTO.postId())).thenReturn(Optional.of(postTags));
+        when(postRepository.findById(1)).thenReturn(Optional.of(post));
+        when(repository.findByPostId(1)).thenReturn(Optional.of(postTags));
         when(repository.save(any(PostTags.class))).thenReturn(postTags);
 
-        assertDoesNotThrow(() -> tagService.addTagsToPost(postTagsDTO));
+        assertDoesNotThrow(() -> tagService.addTagsToPost(1, tags));
 
         verify(repository).save(any(PostTags.class));
     }
 
     @Test
     void addTagsToPost_Failure_PostNotFound() {
-        when(postRepository.findById(postTagsDTO.postId())).thenReturn(Optional.empty());
+        when(postRepository.findById(1)).thenReturn(Optional.empty());
 
         EntityNotFoundException exception = assertThrows(
                 EntityNotFoundException.class,
-                () -> tagService.addTagsToPost(postTagsDTO)
+                () -> tagService.addTagsToPost(1, tags)
         );
 
         assertTrue(exception.getMessage().contains("Post not found"));
@@ -150,12 +148,12 @@ class TagServiceTest {
 
     @Test
     void addTagsToPost_Failure_TagsNotFound() {
-        when(postRepository.findById(postTagsDTO.postId())).thenReturn(Optional.of(post));
-        when(repository.findByPostId(postTagsDTO.postId())).thenReturn(Optional.empty());
+        when(postRepository.findById(1)).thenReturn(Optional.of(post));
+        when(repository.findByPostId(1)).thenReturn(Optional.empty());
 
         EntityNotFoundException exception = assertThrows(
                 EntityNotFoundException.class,
-                () -> tagService.addTagsToPost(postTagsDTO)
+                () -> tagService.addTagsToPost(1, tags)
         );
 
         assertTrue(exception.getMessage().contains("Failed to Add Tags For Post"));
@@ -164,13 +162,11 @@ class TagServiceTest {
 
     @Test
     void removeTagsFromPost_Success_DeleteWhenEmpty() {
-        // Remove both tags - should delete, not save
-        PostTagsDTO removeDTO = new PostTagsDTO(1, List.of("tag1", "tag2"));
-        when(postRepository.findById(removeDTO.postId())).thenReturn(Optional.of(post));
-        when(repository.findByPostId(removeDTO.postId())).thenReturn(Optional.of(postTags));
+        when(postRepository.findById(1)).thenReturn(Optional.of(post));
+        when(repository.findByPostId(1)).thenReturn(Optional.of(postTags));
         doNothing().when(repository).delete(any(PostTags.class));
 
-        assertDoesNotThrow(() -> tagService.removeTagsFromPost(removeDTO));
+        assertDoesNotThrow(() -> tagService.removeTagsFromPost(1, tags));
 
         verify(repository).delete(any(PostTags.class));
         verify(repository, never()).save(any());
@@ -178,11 +174,11 @@ class TagServiceTest {
 
     @Test
     void removeTagsFromPost_Failure_PostNotFound() {
-        when(postRepository.findById(postTagsDTO.postId())).thenReturn(Optional.empty());
+        when(postRepository.findById(1)).thenReturn(Optional.empty());
 
         EntityNotFoundException exception = assertThrows(
                 EntityNotFoundException.class,
-                () -> tagService.removeTagsFromPost(postTagsDTO)
+                () -> tagService.removeTagsFromPost(1, tags)
         );
 
         assertTrue(exception.getMessage().contains("Post not found"));
@@ -190,12 +186,12 @@ class TagServiceTest {
 
     @Test
     void removeTagsFromPost_Failure_TagsNotFound() {
-        when(postRepository.findById(postTagsDTO.postId())).thenReturn(Optional.of(post));
-        when(repository.findByPostId(postTagsDTO.postId())).thenReturn(Optional.empty());
+        when(postRepository.findById(1)).thenReturn(Optional.of(post));
+        when(repository.findByPostId(1)).thenReturn(Optional.empty());
 
         EntityNotFoundException exception = assertThrows(
                 EntityNotFoundException.class,
-                () -> tagService.removeTagsFromPost(postTagsDTO)
+                () -> tagService.removeTagsFromPost(1, tags)
         );
 
         assertTrue(exception.getMessage().contains("Failed to Remove Tags For Post"));

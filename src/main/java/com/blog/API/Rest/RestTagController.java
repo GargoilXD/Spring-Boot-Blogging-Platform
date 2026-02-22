@@ -1,7 +1,6 @@
 package com.blog.API.Rest;
 
 import com.blog.API.Response.SuccessResponse;
-import com.blog.DataTransporter.Tags.PostTagsDTO;
 import com.blog.DataTransporter.Tags.ResponseTagsDTO;
 import com.blog.Service.TagService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -73,15 +73,10 @@ public class RestTagController {
     ) {
         return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Tags retrieved successfully", tagService.findByPostId(postId))) ;
     }
-    @PostMapping
+    @PostMapping("/{postId}")
     @Operation(
         summary = "Set post tags",
-        description = "Replaces all tags for a specific post with the provided list. Any existing tags will be removed and replaced with the new set.",
-        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "Post tags data",
-            required = true,
-            content = @Content(schema = @Schema(implementation = PostTagsDTO.class))
-        )
+        description = "Replaces all tags for a specific post with the provided list. Any existing tags will be removed and replaced with the new set."
     )
     @ApiResponses(value = {
         @ApiResponse(
@@ -100,20 +95,14 @@ public class RestTagController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<SuccessResponse<Void>> setPostTags(@Valid @RequestBody PostTagsDTO DTO) {
-        if (DTO.postId() == null || DTO.postId() <= 0) return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new SuccessResponse<>(HttpStatus.BAD_REQUEST, "Invalid post ID"));
-        tagService.setPostTags(DTO);
+    public ResponseEntity<SuccessResponse<Void>> setPostTags(@NotNull(message = "Post ID is required") @Min(1) Integer postId, @Valid @RequestBody List<String> tags) {
+        tagService.setPostTags(postId, tags);
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse<>(HttpStatus.CREATED, "Tags set successfully"));
     }
     @PutMapping("/add/{postId}")
     @Operation(
         summary = "Add tags to post",
-        description = "Adds new tags to a specific post. Existing tags are preserved. Duplicate tags will be ignored.",
-        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "Tags to add to the post",
-            required = true,
-            content = @Content(schema = @Schema(implementation = PostTagsDTO.class))
-        )
+        description = "Adds new tags to a specific post. Existing tags are preserved. Duplicate tags will be ignored."
     )
     @ApiResponses(value = {
         @ApiResponse(
@@ -135,20 +124,15 @@ public class RestTagController {
     public ResponseEntity<SuccessResponse<Void>> addTagsToPost(
         @Parameter(description = "ID of the post to add tags to", required = true, example = "1")
         @PathVariable @Min(1) Integer postId,
-        @Valid @RequestBody PostTagsDTO DTO
+        @Valid @RequestBody List<String> tags
     ) {
-        tagService.addTagsToPost(DTO.withId(postId));
+        tagService.addTagsToPost(postId, tags);
         return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Tags added successfully"));
     }
     @PutMapping("/remove/{postId}")
     @Operation(
         summary = "Remove tags from post",
-        description = "Removes specified tags from a specific post. Only the tags in the request will be removed; other tags remain unchanged.",
-        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "Tags to remove from the post",
-            required = true,
-            content = @Content(schema = @Schema(implementation = PostTagsDTO.class))
-        )
+        description = "Removes specified tags from a specific post. Only the tags in the request will be removed; other tags remain unchanged."
     )
     @ApiResponses(value = {
         @ApiResponse(
@@ -170,9 +154,9 @@ public class RestTagController {
     public ResponseEntity<SuccessResponse<Void>> removeTagsFromPost(
             @Parameter(description = "ID of the post to remove tags from", required = true, example = "1")
             @PathVariable @Min(1) Integer postId,
-            @Valid @RequestBody PostTagsDTO DTO
+            @Valid @RequestBody List<String> tags
     ) {
-        tagService.removeTagsFromPost(DTO.withId(postId));
+        tagService.removeTagsFromPost(postId, tags);
         return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Tags removed successfully"));
     }
     @DeleteMapping("/{postId}")

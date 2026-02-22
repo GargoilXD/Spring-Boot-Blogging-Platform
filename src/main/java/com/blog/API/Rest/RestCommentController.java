@@ -121,7 +121,7 @@ public class RestCommentController {
             @PathVariable Integer id,
             @Valid @RequestBody UpdateCommentDTO dto
     ) {
-        return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Comment updated successfully", new ResponseCommentDTO(commentService.update(dto.withId(id)))));
+        return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Comment updated successfully", new ResponseCommentDTO(commentService.update(id, dto))));
     }
     @DeleteMapping("/{id}")
     @Operation(

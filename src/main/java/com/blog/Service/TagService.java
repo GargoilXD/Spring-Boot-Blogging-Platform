@@ -1,6 +1,5 @@
 package com.blog.Service;
 
-import com.blog.DataTransporter.Tags.PostTagsDTO;
 import com.blog.Model.PostTags;
 import com.blog.Repository.PostRepository;
 import com.blog.Repository.TagRepository;
@@ -8,6 +7,10 @@ import com.blog.Repository.TagRepository;
 import java.util.*;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
@@ -16,14 +19,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 
 @Service
+@RequiredArgsConstructor
 public class TagService {
-    TagRepository repository;
-    PostRepository postRepository;
+    final TagRepository repository;
+    final PostRepository postRepository;
 
-    public TagService(TagRepository repository, PostRepository postRepository) {
-        this.repository = repository;
-        this.postRepository = postRepository;
-    }
     @Cacheable(cacheNames = "PostTags.findAll", key = "{#pageable.pageNumber, #pageable.pageSize, #pageable.sort}")
     public Page<PostTags> findAll(Pageable pageable) {
         return repository.findAll(pageable);
@@ -37,35 +37,35 @@ public class TagService {
         return repository.count();
     }
     @Caching(evict = {
-            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#DTO.postId"),
+            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#dto.postId"),
             @CacheEvict(cacheNames = {"PostTags.findAll", "PostTags.count"}, allEntries = true)
     })
-    public void setPostTags(PostTagsDTO DTO) {
-        postRepository.findById(DTO.postId()).orElseThrow(() -> new EntityNotFoundException("Post not found: " + DTO.postId()));
-        repository.findByPostId(DTO.postId()).ifPresent(existing -> repository.delete(existing));
-        repository.save(DTO.toEntity());
+    public void setPostTags(@NotNull(message = "Post ID is required") @Min(1) Integer postId, @NotEmpty(message = "Tags are required") List<String> tags) {
+        postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found: " + postId));
+        repository.findByPostId(postId).ifPresent(repository::delete);
+        repository.save(new PostTags(null, postId, tags));
     }
     @Caching(evict = {
-            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#DTO.postId"),
+            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#dto.postId"),
             @CacheEvict(cacheNames = {"PostTags.findAll", "PostTags.count"}, allEntries = true)
     })
-    public void addTagsToPost(PostTagsDTO DTO) {
-        postRepository.findById(DTO.postId()).orElseThrow(() -> new EntityNotFoundException("Post not found: " + DTO.postId()));
-        PostTags existing = repository.findByPostId(DTO.postId()).orElseThrow(() -> new EntityNotFoundException("Failed to Add Tags For Post:" + DTO.postId()));
+    public void addTagsToPost(@NotNull(message = "Post ID is required") @Min(1) Integer postId, @NotEmpty(message = "Tags are required") List<String> tags) {
+        postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found: " + postId));
+        PostTags existing = repository.findByPostId(postId).orElseThrow(() -> new EntityNotFoundException("Failed to Add Tags For Post:" + postId));
         Set<String> currentTags = new HashSet<>(existing.getTags());
-        currentTags.addAll(DTO.tags());
+        currentTags.addAll(tags);
         existing.setTags(new ArrayList<>(currentTags));
         repository.save(existing);
     }
     @Caching(evict = {
-            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#DTO.postId"),
+            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#dto.postId"),
             @CacheEvict(cacheNames = {"PostTags.findAll", "PostTags.count"}, allEntries = true)
     })
-    public void removeTagsFromPost(PostTagsDTO DTO) {
-        postRepository.findById(DTO.postId()).orElseThrow(() -> new EntityNotFoundException("Post not found: " + DTO.postId()));
-        PostTags existing = repository.findByPostId(DTO.postId()).orElseThrow(() -> new EntityNotFoundException("Failed to Remove Tags For Post:" + DTO.postId()));
+    public void removeTagsFromPost(@NotNull(message = "Post ID is required") @Min(1) Integer postId, @NotEmpty(message = "Tags are required") List<String> tags) {
+        postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found: " + postId));
+        PostTags existing = repository.findByPostId(postId).orElseThrow(() -> new EntityNotFoundException("Failed to Remove Tags For Post:" + postId));
         Set<String> currentTags = new HashSet<>(existing.getTags());
-        DTO.tags().forEach(currentTags::remove);
+        tags.forEach(currentTags::remove);
         if (currentTags.isEmpty()) repository.delete(existing);
         else {
             existing.setTags(new ArrayList<>(currentTags));

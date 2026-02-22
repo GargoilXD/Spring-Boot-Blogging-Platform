@@ -25,10 +25,7 @@ public record CreatePostDTO(
         title = title.trim();
         body = body.trim();
     }
-    public CreatePostDTO(Post post) {
-        this(post.getUserId(), post.getTitle(), post.getBody(), post.isDraft());
-    }
     public Post toEntity() {
-        return new Post(null, userId, title, body, draft, null);
+        return new Post(title, body, draft);
     }
 }

@@ -8,8 +8,6 @@ import jakarta.validation.constraints.NotNull;
 
 @Schema(description = "Data for updating an existing blog post. All fields are required. The post ID must exist in the system.")
 public record UpdatePostDTO(
-    @Schema(description = "ID of the post to update. Must reference an existing post.", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
-    Integer postId,
     @Schema(description = "ID of the user who owns the post. Must match the original post author.", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "User ID is required") @Min(1)
     Integer userId,
@@ -27,13 +25,9 @@ public record UpdatePostDTO(
         title = title.trim();
         body = body.trim();
     }
-    public UpdatePostDTO(Post post) {
-        this(post.getId(), post.getUserId(), post.getTitle(), post.getBody(), post.isDraft());
-    }
-    public UpdatePostDTO withId(@NotNull(message = "Post ID is required") @Min(1) Integer postId) {
-        return new UpdatePostDTO(postId, userId, title, body, draft);
-    }
-    public Post toEntity() {
-        return new Post(postId, userId, title, body, draft, null);
+    public void update(Post post) {
+        post.setTitle(title);
+        post.setBody(body);
+        post.setDraft(draft);
     }
 }

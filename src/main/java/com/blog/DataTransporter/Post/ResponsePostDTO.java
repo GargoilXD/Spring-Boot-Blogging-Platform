@@ -27,6 +27,6 @@ public record ResponsePostDTO(
     String createdAt
 ) {
     public ResponsePostDTO(Post post) {
-        this(post.getId(), post.getUserId(), post.getTitle(), post.getBody(), post.isDraft(), post.getCreatedAt() != null? post.getCreatedAt().toString() : "");
+        this(post.getId(), post.getUser().getId(), post.getTitle(), post.getBody(), post.isDraft(), post.getCreatedAt() != null? post.getCreatedAt().toString() : "");
     }
 }

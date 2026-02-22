@@ -4,7 +4,6 @@ import com.blog.DataTransporter.Comment.CreateCommentDTO;
 import com.blog.DataTransporter.Comment.UpdateCommentDTO;
 import com.blog.DataTransporter.Post.CreatePostDTO;
 import com.blog.DataTransporter.Post.UpdatePostDTO;
-import com.blog.DataTransporter.Tags.PostTagsDTO;
 import com.blog.DataTransporter.User.RegisterUserDTO;
 import com.blog.Model.Comment;
 import com.blog.Model.Post;
@@ -58,10 +57,6 @@ class GraphQLResolverTest {
     @BeforeEach
     void setUp() {
         postTags = new PostTags("1", 1, List.of("tag1", "tag2"));
-//        when(post.getId()).thenReturn(1);
-//        when(post.getTitle()).thenReturn("Test Post");
-//        when(comment.getId()).thenReturn(1);
-//        when(postTags.getTags()).thenReturn(List.of("tag1", "tag2"));
     }
 
     // ==================== Query Mappings ====================
@@ -201,14 +196,14 @@ class GraphQLResolverTest {
 
     @Test
     void updatePost_Success() {
-        UpdatePostDTO input = new UpdatePostDTO(1, 1, "Title", "Content", false);
-        when(postService.update(input)).thenReturn(post);
+        UpdatePostDTO input = new UpdatePostDTO(1, "Title", "Content", false);
+        when(postService.update(1, input)).thenReturn(post);
 
-        Post result = graphQLResolver.updatePost(input);
+        Post result = graphQLResolver.updatePost(1, input);
 
         assertNotNull(result);
         assertEquals(post, result);
-        verify(postService).update(input);
+        verify(postService).update(1, input);
     }
 
     @Test
@@ -250,11 +245,11 @@ class GraphQLResolverTest {
 
     @Test
     void updateComment_Success() {
-        UpdateCommentDTO input = new UpdateCommentDTO(1, 1, 1, "Updated");
-        when(commentService.update(input)).thenReturn(comment);
-        Boolean result = graphQLResolver.updateComment(input);
+        UpdateCommentDTO input = new UpdateCommentDTO(1, 1, "Updated");
+        when(commentService.update(1, input)).thenReturn(comment);
+        Boolean result = graphQLResolver.updateComment(1, input);
         assertTrue(result);
-        verify(commentService).update(input);
+        verify(commentService).update(1, input);
     }
 
     @Test
@@ -271,35 +266,32 @@ class GraphQLResolverTest {
 
     @Test
     void setPostTags_Success() {
-        PostTagsDTO dto = new PostTagsDTO(1, List.of("tag1", "tag2"));
-        doNothing().when(tagService).setPostTags(dto);
+        doNothing().when(tagService).setPostTags(1, List.of("tag1", "tag2"));
 
         Boolean result = graphQLResolver.setPostTags(1, List.of("tag1", "tag2"));
 
         assertTrue(result);
-        verify(tagService).setPostTags(dto);
+        verify(tagService).setPostTags(1, List.of("tag1", "tag2"));
     }
 
     @Test
     void addTagsToPost_Success() {
-        PostTagsDTO dto = new PostTagsDTO(1, List.of("tag3"));
-        doNothing().when(tagService).addTagsToPost(dto);
+        doNothing().when(tagService).addTagsToPost(1, List.of("tag3"));
 
         Boolean result = graphQLResolver.addTagsToPost(1, List.of("tag3"));
 
         assertTrue(result);
-        verify(tagService).addTagsToPost(dto);
+        verify(tagService).addTagsToPost(1, List.of("tag3"));
     }
 
     @Test
     void removeTagsFromPost_Success() {
-        PostTagsDTO dto = new PostTagsDTO(1, List.of("tag1"));
-        doNothing().when(tagService).removeTagsFromPost(dto);
+        doNothing().when(tagService).removeTagsFromPost(1, List.of("tag1"));
 
         Boolean result = graphQLResolver.removeTagsFromPost(1, List.of("tag1"));
 
         assertTrue(result);
-        verify(tagService).removeTagsFromPost(dto);
+        verify(tagService).removeTagsFromPost(1, List.of("tag1"));
     }
 
     @Test
