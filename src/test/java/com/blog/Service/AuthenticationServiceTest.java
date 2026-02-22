@@ -1,18 +1,30 @@
 package com.blog.Service;
 
-import com.blog.Repository.UserRepository;
 import com.blog.DataTransporter.User.RegisterUserDTO;
-import com.blog.Model.User;
 import com.blog.Exception.AuthenticationException;
+import com.blog.Model.Role;
+import com.blog.Model.User;
+import com.blog.Repository.UserRepository;
+import com.blog.Security.BlogUserDetailsService;
+import com.blog.Security.JwtService;
+import com.blog.Security.RefreshTokenService;
+import com.blog.Security.TokenBlacklistService;
 import com.blog.Utility.PasswordHasher;
 import jakarta.persistence.EntityExistsException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,102 +34,206 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class AuthenticationServiceTest {
 
-    @Mock
-    private UserRepository repository;
-
-    @Mock
-    private PasswordHasher passwordHasher;
-
-    @Mock
-    private User user;
+    @Mock private UserRepository         repository;
+    @Mock private PasswordHasher         passwordHasher;
+    @Mock private JwtService             jwtService;
+    @Mock private BlogUserDetailsService userDetailsService;
+    @Mock private TokenBlacklistService  tokenBlacklistService;
+    @Mock private RefreshTokenService    refreshTokenService;
 
     @InjectMocks
     private AuthenticationService authService;
 
+    private User        testUser;
+    private UserDetails testUserDetails;
     private RegisterUserDTO registerDTO;
 
     @BeforeEach
     void setUp() {
-        registerDTO = new RegisterUserDTO("testuser", "password123", "Full Name", "test@example.com", "Male");
+        testUser = new User(1, "testuser", "hashed_pw", "Test User",
+                            "test@example.com", "M", LocalDateTime.now(),
+                            Role.READER, new ArrayList<>(), new ArrayList<>());
+
+        testUserDetails = org.springframework.security.core.userdetails.User
+                .withUsername("testuser")
+                .password("hashed_pw")
+                .authorities(new SimpleGrantedAuthority("ROLE_READER"))
+                .build();
+
+        registerDTO = new RegisterUserDTO("testuser", "password123", "Test User",
+                                          "test@example.com", "Male");
     }
 
-    @Test
-    void login_Success() {
-        String username = "testuser";
-        String password = "password123";
-        String hashedPassword = "hashed_value";
+    // ── Login Tests ───────────────────────────────────────────────────────────
 
-        when(repository.findByUsername(username.trim())).thenReturn(Optional.of(user));
-        when(user.getPasswordHash()).thenReturn(hashedPassword);
-        when(passwordHasher.verifyPassword(password, hashedPassword)).thenReturn(true);
+    @Nested
+    @DisplayName("Login")
+    class LoginTests {
 
-        assertDoesNotThrow(() -> authService.login(username, password));
+        @Test
+        @DisplayName("Successful login returns access and refresh tokens")
+        void login_Success_ReturnsTokenMap() {
+            when(repository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+            when(passwordHasher.verifyPassword("password123", "hashed_pw")).thenReturn(true);
+            when(userDetailsService.loadUserByUsername("testuser")).thenReturn(testUserDetails);
+            when(jwtService.generateAccessToken(testUserDetails)).thenReturn("access.token.here");
+            when(jwtService.generateRefreshToken(testUserDetails)).thenReturn("refresh.token.here");
 
-        verify(repository).findByUsername(username.trim());
-        verify(passwordHasher).verifyPassword(password, hashedPassword);
+            Map<String, String> result = authService.login("testuser", "password123");
+
+            assertAll(
+                () -> assertEquals("access.token.here",  result.get("accessToken")),
+                () -> assertEquals("refresh.token.here", result.get("refreshToken")),
+                () -> assertEquals("Bearer",             result.get("type"))
+            );
+            verify(refreshTokenService).store("refresh.token.here", "testuser");
+        }
+
+        @Test
+        @DisplayName("Login with unknown username throws AuthenticationException")
+        void login_UserNotFound_ThrowsException() {
+            when(repository.findByUsername(anyString())).thenReturn(Optional.empty());
+
+            AuthenticationException ex = assertThrows(AuthenticationException.class,
+                    () -> authService.login("unknown", "password123"));
+
+            assertEquals("Invalid credentials", ex.getMessage());
+            verify(passwordHasher, never()).verifyPassword(anyString(), anyString());
+        }
+
+        @Test
+        @DisplayName("Login with wrong password throws AuthenticationException")
+        void login_WrongPassword_ThrowsException() {
+            when(repository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+            when(passwordHasher.verifyPassword("wrong", "hashed_pw")).thenReturn(false);
+
+            AuthenticationException ex = assertThrows(AuthenticationException.class,
+                    () -> authService.login("testuser", "wrong"));
+
+            assertEquals("Invalid credentials", ex.getMessage());
+        }
+
+        @Test
+        @DisplayName("Login trims leading/trailing spaces from username")
+        void login_TrimsUsername() {
+            when(repository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+            when(passwordHasher.verifyPassword(anyString(), anyString())).thenReturn(true);
+            when(userDetailsService.loadUserByUsername("testuser")).thenReturn(testUserDetails);
+            when(jwtService.generateAccessToken(any())).thenReturn("access");
+            when(jwtService.generateRefreshToken(any())).thenReturn("refresh");
+
+            assertDoesNotThrow(() -> authService.login("  testuser  ", "password123"));
+            verify(repository).findByUsername("testuser"); // trimmed
+        }
     }
 
-    @Test
-    void login_Failure_UserNotFound() {
-        String username = "unknown";
-        String password = "password123";
+    // ── Register Tests ────────────────────────────────────────────────────────
 
-        when(repository.findByUsername(username.trim())).thenReturn(Optional.empty());
+    @Nested
+    @DisplayName("Register")
+    class RegisterTests {
 
-        AuthenticationException exception = assertThrows(
-                AuthenticationException.class,
-                () -> authService.login(username, password)
-        );
+        @Test
+        @DisplayName("Successful registration saves hashed user")
+        void register_Success() {
+            when(repository.findByUsername("testuser")).thenReturn(Optional.empty());
+            when(passwordHasher.hashPassword("password123")).thenReturn("new_hash");
+            when(repository.save(any(User.class))).thenReturn(testUser);
 
-        assertEquals("Invalid credentials", exception.getMessage());
-        verify(repository).findByUsername(username.trim());
-        verify(passwordHasher, never()).verifyPassword(anyString(), anyString());
+            assertDoesNotThrow(() -> authService.register(registerDTO));
+
+            verify(passwordHasher).hashPassword("password123");
+            verify(repository).save(any(User.class));
+        }
+
+        @Test
+        @DisplayName("Duplicate username throws EntityExistsException")
+        void register_DuplicateUsername_ThrowsException() {
+            when(repository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+
+            EntityExistsException ex = assertThrows(EntityExistsException.class,
+                    () -> authService.register(registerDTO));
+
+            assertTrue(ex.getMessage().contains("Username already exists"));
+            verify(repository, never()).save(any());
+        }
     }
 
-    @Test
-    void login_Failure_WrongPassword() {
-        String username = "testuser";
-        String password = "wrong_password";
-        String hashedPassword = "hashed_value";
+    // ── Refresh Tests ─────────────────────────────────────────────────────────
 
-        when(repository.findByUsername(username.trim())).thenReturn(Optional.of(user));
-        when(user.getPasswordHash()).thenReturn(hashedPassword);
-        when(passwordHasher.verifyPassword(password, hashedPassword)).thenReturn(false);
+    @Nested
+    @DisplayName("Refresh Token")
+    class RefreshTests {
 
-        AuthenticationException exception = assertThrows(
-                AuthenticationException.class,
-                () -> authService.login(username, password)
-        );
+        @Test
+        @DisplayName("Valid refresh token returns new token pair")
+        void refresh_ValidToken_ReturnsNewTokens() {
+            when(jwtService.isTokenExpired("refresh.token")).thenReturn(false);
+            when(jwtService.extractUsername("refresh.token")).thenReturn("testuser");
+            when(refreshTokenService.isValid("refresh.token", "testuser")).thenReturn(true);
+            when(jwtService.isRefreshTokenValid("refresh.token", "testuser")).thenReturn(true);
+            when(userDetailsService.loadUserByUsername("testuser")).thenReturn(testUserDetails);
+            when(jwtService.generateAccessToken(testUserDetails)).thenReturn("new.access.token");
+            when(jwtService.generateRefreshToken(testUserDetails)).thenReturn("new.refresh.token");
 
-        assertEquals("Invalid credentials", exception.getMessage());
+            Map<String, String> result = authService.refresh("refresh.token");
+
+            assertAll(
+                () -> assertEquals("new.access.token",  result.get("accessToken")),
+                () -> assertEquals("new.refresh.token", result.get("refreshToken"))
+            );
+            // Old token evicted, new token stored (rotation)
+            verify(refreshTokenService).evict("refresh.token");
+            verify(refreshTokenService).store("new.refresh.token", "testuser");
+        }
+
+        @Test
+        @DisplayName("Expired refresh token throws AuthenticationException")
+        void refresh_ExpiredToken_ThrowsException() {
+            when(jwtService.isTokenExpired("expired.token")).thenReturn(true);
+
+            AuthenticationException ex = assertThrows(AuthenticationException.class,
+                    () -> authService.refresh("expired.token"));
+
+            assertTrue(ex.getMessage().contains("Refresh token has expired"));
+        }
+
+        @Test
+        @DisplayName("Unknown/evicted refresh token throws AuthenticationException")
+        void refresh_RevokedToken_ThrowsException() {
+            when(jwtService.isTokenExpired("revoked.token")).thenReturn(false);
+            when(jwtService.extractUsername("revoked.token")).thenReturn("testuser");
+            when(refreshTokenService.isValid("revoked.token", "testuser")).thenReturn(false);
+
+            AuthenticationException ex = assertThrows(AuthenticationException.class,
+                    () -> authService.refresh("revoked.token"));
+
+            assertTrue(ex.getMessage().contains("invalid or has been revoked"));
+        }
     }
 
-    @Test
-    void register_Success() {
-        when(repository.findByUsername(registerDTO.username().trim())).thenReturn(Optional.empty());
-        when(passwordHasher.hashPassword(registerDTO.password())).thenReturn("new_hash");
-        // Mock the chain: DTO.withPasswordHash(...).toEntity()
-        // Since we can't easily mock record methods, we assume the service calls save.
-        // We verify save is called with any User object.
-        when(repository.save(any(User.class))).thenReturn(user);
+    // ── Logout Tests ──────────────────────────────────────────────────────────
 
-        assertDoesNotThrow(() -> authService.register(registerDTO));
+    @Nested
+    @DisplayName("Logout")
+    class LogoutTests {
 
-        verify(repository).findByUsername(registerDTO.username().trim());
-        verify(passwordHasher).hashPassword(registerDTO.password());
-        verify(repository).save(any(User.class));
-    }
+        @Test
+        @DisplayName("Logout blacklists access token and evicts refresh token")
+        void logout_BlacklistsAndEvicts() {
+            authService.logout("access.token", "refresh.token");
 
-    @Test
-    void register_Failure_UserExists() {
-        when(repository.findByUsername(registerDTO.username().trim())).thenReturn(Optional.of(user));
+            verify(tokenBlacklistService).revoke("access.token");
+            verify(refreshTokenService).evict("refresh.token");
+        }
 
-        EntityExistsException exception = assertThrows(
-                EntityExistsException.class,
-                () -> authService.register(registerDTO)
-        );
+        @Test
+        @DisplayName("Logout with null refresh token only blacklists access token")
+        void logout_NullRefreshToken_OnlyBlacklists() {
+            authService.logout("access.token", null);
 
-        assertTrue(exception.getMessage().contains("Username already exists"));
-        verify(repository, never()).save(any());
+            verify(tokenBlacklistService).revoke("access.token");
+            verify(refreshTokenService, never()).evict(anyString());
+        }
     }
 }
