@@ -20,11 +20,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.Objects;
 import java.util.Optional;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 public class PostService {
     private final PostRepository repository;

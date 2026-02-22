@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
     full_name VARCHAR(255) NOT NULL,
     email VARCHAR(255),
     gender VARCHAR(1) NOT NULL,
+    role VARCHAR(10) DEFAULT 'READER',
     created_at TIMESTAMP DEFAULT now()
 );
 CREATE INDEX ON users(id);

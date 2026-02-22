@@ -36,7 +36,7 @@ public record RegisterUserDTO(
     }
 
     public User toEntity() {
-        return new User(null, username, password, fullName, email, gender, null, null, null);
+        return new User(null, username, password, fullName, email, gender, null, null, null, null);
     }
     public RegisterUserDTO withPasswordHash(String newPassword) {
         return new RegisterUserDTO(username, newPassword, fullName, email, gender);

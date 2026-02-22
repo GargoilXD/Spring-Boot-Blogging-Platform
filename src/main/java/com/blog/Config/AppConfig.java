@@ -9,7 +9,6 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 
 @Configuration
 @EnableTransactionManagement
-@EnableWebSecurity
 public class AppConfig {
 	@Bean
 	public CacheManager cacheManager() {
