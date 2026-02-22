@@ -20,6 +20,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("api/comments")
@@ -86,6 +87,7 @@ public class RestCommentController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SuccessResponse<ResponseCommentDTO>> createComment(@Valid @RequestBody CreateCommentDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse<>(HttpStatus.CREATED, "Comment created successfully", new ResponseCommentDTO(commentService.save(dto))))  ;
     }
@@ -116,6 +118,7 @@ public class RestCommentController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SuccessResponse<ResponseCommentDTO>> updateComment(
             @Parameter(description = "ID of the comment to update", required = true, example = "1")
             @PathVariable Integer id,
@@ -140,6 +143,7 @@ public class RestCommentController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'AUTHOR')")
     public ResponseEntity<SuccessResponse<Void>> deleteComment(
         @Parameter(description = "ID of the comment to delete", required = true, example = "1")
         @PathVariable Integer id

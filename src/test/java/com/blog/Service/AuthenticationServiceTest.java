@@ -64,8 +64,6 @@ class AuthenticationServiceTest {
                                           "test@example.com", "Male");
     }
 
-    // ── Login Tests ───────────────────────────────────────────────────────────
-
     @Nested
     @DisplayName("Login")
     class LoginTests {
@@ -127,8 +125,6 @@ class AuthenticationServiceTest {
         }
     }
 
-    // ── Register Tests ────────────────────────────────────────────────────────
-
     @Nested
     @DisplayName("Register")
     class RegisterTests {
@@ -158,8 +154,6 @@ class AuthenticationServiceTest {
             verify(repository, never()).save(any());
         }
     }
-
-    // ── Refresh Tests ─────────────────────────────────────────────────────────
 
     @Nested
     @DisplayName("Refresh Token")
@@ -211,8 +205,6 @@ class AuthenticationServiceTest {
             assertTrue(ex.getMessage().contains("invalid or has been revoked"));
         }
     }
-
-    // ── Logout Tests ──────────────────────────────────────────────────────────
 
     @Nested
     @DisplayName("Logout")

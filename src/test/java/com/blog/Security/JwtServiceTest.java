@@ -14,25 +14,9 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * ──────────────────────────────────────────────────────────────
- *  Epic 2 – JwtService Unit Tests
- * ──────────────────────────────────────────────────────────────
- *
- *  Covers User Story 2.1 and 2.2:
- *    - Token generation (access + refresh)
- *    - Claim verification (subject, roles, type, expiry)
- *    - Token validation (valid, expired, wrong type, wrong user)
- *    - Token inspection endpoint data
- *
- *  Uses ReflectionTestUtils to inject @Value fields without Spring context.
- */
 class JwtServiceTest {
-
     private JwtService jwtService;
-
-    // Minimum 256-bit secret (32 chars) for HS256
-    private static final String TEST_SECRET = "test-secret-key-that-is-256-bits-long!!";
+    private static final String TEST_SECRET = "MyPftS4ocQf396p50zpOKkcNmtm57qnxyZAcTPlmClo";
 
     private UserDetails authorUser;
     private UserDetails adminUser;
@@ -54,8 +38,6 @@ class JwtServiceTest {
                 .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))
                 .build();
     }
-
-    // ── Access Token Generation ───────────────────────────────────────────────
 
     @Nested
     @DisplayName("Access Token — Generation")
@@ -120,8 +102,6 @@ class JwtServiceTest {
         }
     }
 
-    // ── Refresh Token Generation ──────────────────────────────────────────────
-
     @Nested
     @DisplayName("Refresh Token — Generation")
     class RefreshTokenGeneration {
@@ -172,8 +152,6 @@ class JwtServiceTest {
         }
     }
 
-    // ── Token Validation ──────────────────────────────────────────────────────
-
     @Nested
     @DisplayName("Token Validation")
     class TokenValidation {
@@ -210,14 +188,11 @@ class JwtServiceTest {
         @Test
         @DisplayName("Expired token fails isTokenExpired check")
         void expiredToken_IsDetected() {
-            // Generate a token with -1ms expiry (already expired)
             ReflectionTestUtils.setField(jwtService, "accessExpirationMs", -1L);
             String expiredToken = jwtService.generateAccessToken(authorUser);
             assertTrue(jwtService.isTokenExpired(expiredToken));
         }
     }
-
-    // ── Token Inspection ──────────────────────────────────────────────────────
 
     @Nested
     @DisplayName("Token Inspection (User Story 2.2)")
@@ -257,9 +232,9 @@ class JwtServiceTest {
         }
 
         @Test
-        @DisplayName("generateToken() delegates to generateAccessToken()")
-        void generateToken_DelegatesToAccessToken() {
-            String token = jwtService.generateToken(authorUser);
+        @DisplayName("generateAccessToken() delegates to generateToken()")
+        void generateAccessToken_DelegatesToAccessToken() {
+            String token = jwtService.generateAccessToken(authorUser);
             Map<String, Object> claims = jwtService.inspectToken(token);
             assertEquals("access", claims.get("type"));
         }

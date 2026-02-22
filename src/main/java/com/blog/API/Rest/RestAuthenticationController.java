@@ -19,22 +19,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-/**
- * ──────────────────────────────────────────────────────────────
- *  Epic 2 – JWT Authentication Endpoints
- * ──────────────────────────────────────────────────────────────
- *
- *  POST /api/auth/login         — credentials → { accessToken, refreshToken }
- *  POST /api/auth/register      — create account (READER role)
- *  POST /api/auth/refresh       — refresh token → new { accessToken, refreshToken }
- *  POST /api/auth/logout        — revoke access + refresh tokens
- *  GET  /api/auth/token/inspect — decode and display JWT claims (for Postman verification)
- */
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "Authentication", description = "JWT authentication: login, register, token refresh, logout, and token inspection")
 public class RestAuthenticationController {
-
     private final AuthenticationService authService;
     private final JwtService jwtService;
 
@@ -42,9 +30,6 @@ public class RestAuthenticationController {
         this.authService = authService;
         this.jwtService  = jwtService;
     }
-
-    // ── Login ─────────────────────────────────────────────────────────────────
-
     @PostMapping("/login")
     @Operation(
         summary = "Authenticate user",
@@ -57,16 +42,10 @@ public class RestAuthenticationController {
         @ApiResponse(responseCode = "401", description = "Invalid credentials"),
         @ApiResponse(responseCode = "400", description = "Malformed request body")
     })
-    public ResponseEntity<SuccessResponse<Map<String, String>>> login(
-            @Valid @RequestBody LoginUserDTO request) {
-
+    public ResponseEntity<SuccessResponse<Map<String, String>>> login(@Valid @RequestBody LoginUserDTO request) {
         Map<String, String> tokens = authService.login(request.username(), request.password());
-        return ResponseEntity.status(HttpStatus.ACCEPTED)
-                .body(new SuccessResponse<>(HttpStatus.ACCEPTED, "User authenticated successfully", tokens));
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(new SuccessResponse<>(HttpStatus.ACCEPTED, "User authenticated successfully", tokens));
     }
-
-    // ── Register ──────────────────────────────────────────────────────────────
-
     @PostMapping("/register")
     @Operation(
         summary = "Register new user",
@@ -78,16 +57,10 @@ public class RestAuthenticationController {
         @ApiResponse(responseCode = "409", description = "Username already exists"),
         @ApiResponse(responseCode = "400", description = "Invalid registration data")
     })
-    public ResponseEntity<SuccessResponse<Void>> register(
-            @Valid @RequestBody RegisterUserDTO request) {
-
+    public ResponseEntity<SuccessResponse<Void>> register(@Valid @RequestBody RegisterUserDTO request) {
         authService.register(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new SuccessResponse<>(HttpStatus.CREATED, "User registered successfully"));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse<>(HttpStatus.CREATED, "User registered successfully"));
     }
-
-    // ── Refresh ───────────────────────────────────────────────────────────────
-
     @PostMapping("/refresh")
     @Operation(
         summary = "Refresh access token",
@@ -99,16 +72,10 @@ public class RestAuthenticationController {
         @ApiResponse(responseCode = "200", description = "New token pair issued"),
         @ApiResponse(responseCode = "401", description = "Refresh token is invalid, expired, or revoked")
     })
-    public ResponseEntity<SuccessResponse<Map<String, String>>> refresh(
-            @Valid @RequestBody RefreshRequestDTO request) {
-
+    public ResponseEntity<SuccessResponse<Map<String, String>>> refresh(@Valid @RequestBody RefreshRequestDTO request) {
         Map<String, String> tokens = authService.refresh(request.refreshToken());
-        return ResponseEntity.ok(
-                new SuccessResponse<>(HttpStatus.OK, "Tokens refreshed successfully", tokens));
+        return ResponseEntity.ok(new SuccessResponse<>(HttpStatus.OK, "Tokens refreshed successfully", tokens));
     }
-
-    // ── Logout ────────────────────────────────────────────────────────────────
-
     @PostMapping("/logout")
     @Operation(
         summary = "Logout user",
@@ -120,20 +87,12 @@ public class RestAuthenticationController {
         @ApiResponse(responseCode = "200", description = "Successfully logged out"),
         @ApiResponse(responseCode = "401", description = "Access token missing or invalid")
     })
-    public ResponseEntity<SuccessResponse<Void>> logout(
-            @RequestHeader("Authorization") String authHeader,
-            @RequestBody(required = false) RefreshRequestDTO body) {
-
-        String accessToken  = (authHeader != null && authHeader.startsWith("Bearer "))
-                              ? authHeader.substring(7) : null;
+    public ResponseEntity<SuccessResponse<Void>> logout(@RequestHeader("Authorization") String authHeader, @RequestBody(required = false) RefreshRequestDTO body) {
+        String accessToken  = (authHeader != null && authHeader.startsWith("Bearer ")) ? authHeader.substring(7) : null;
         String refreshToken = (body != null) ? body.refreshToken() : null;
-
         authService.logout(accessToken, refreshToken);
         return ResponseEntity.ok(new SuccessResponse<>(HttpStatus.OK, "Successfully logged out"));
     }
-
-    // ── Token Inspect ─────────────────────────────────────────────────────────
-
     @GetMapping("/token/inspect")
     @Operation(
         summary = "Inspect JWT token claims",
@@ -146,17 +105,12 @@ public class RestAuthenticationController {
         @ApiResponse(responseCode = "200", description = "Token claims decoded successfully"),
         @ApiResponse(responseCode = "401", description = "Invalid or malformed token")
     })
-    public ResponseEntity<SuccessResponse<Map<String, Object>>> inspectToken(
-            @RequestHeader("Authorization") String authHeader) {
-
+    public ResponseEntity<SuccessResponse<Map<String, Object>>> inspectToken(@RequestHeader("Authorization") String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new SuccessResponse<>(HttpStatus.UNAUTHORIZED, "No Bearer token provided"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new SuccessResponse<>(HttpStatus.UNAUTHORIZED, "No Bearer token provided"));
         }
-
         String token = authHeader.substring(7);
         Map<String, Object> claims = jwtService.inspectToken(token);
-        return ResponseEntity.ok(
-                new SuccessResponse<>(HttpStatus.OK, "Token decoded successfully", claims));
+        return ResponseEntity.ok(new SuccessResponse<>(HttpStatus.OK, "Token decoded successfully", claims));
     }
 }

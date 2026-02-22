@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import org.springframework.data.domain.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -100,6 +101,7 @@ public class RestPostController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     public ResponseEntity<SuccessResponse<ResponsePostDTO>> createPost(@Valid @RequestBody CreatePostDTO createDTO) {
         ResponsePostDTO response = new ResponsePostDTO(postService.save(createDTO));
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse<>(HttpStatus.CREATED, "Post created successfully", response));
@@ -131,6 +133,7 @@ public class RestPostController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     public ResponseEntity<SuccessResponse<ResponsePostDTO>> updatePost(
             @Parameter(description = "ID of the post to update", required = true, example = "1")
             @PathVariable Integer id,
@@ -161,6 +164,7 @@ public class RestPostController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
+    @PreAuthorize("hasAnyRole('AUTHOR', 'ADMIN')")
     public ResponseEntity<SuccessResponse<Void>> deletePost(
         @Parameter(description = "ID of the post to delete", required = true, example = "1")
         @PathVariable @Min(1) Integer id
