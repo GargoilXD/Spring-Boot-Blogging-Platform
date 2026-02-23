@@ -14,13 +14,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("api/comments")
 @Validated
@@ -28,9 +31,6 @@ import java.util.List;
 public class RestCommentController {
     private final CommentService commentService;
 
-    public RestCommentController(CommentService commentService) {
-        this.commentService = commentService;
-    }
     @GetMapping("/post/{postId}")
     @Operation(
         summary = "Get comments for a post",
@@ -86,6 +86,7 @@ public class RestCommentController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SuccessResponse<ResponseCommentDTO>> createComment(@Valid @RequestBody CreateCommentDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse<>(HttpStatus.CREATED, "Comment created successfully", new ResponseCommentDTO(commentService.save(dto))))  ;
     }
@@ -116,6 +117,7 @@ public class RestCommentController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SuccessResponse<ResponseCommentDTO>> updateComment(
             @Parameter(description = "ID of the comment to update", required = true, example = "1")
             @PathVariable Integer id,
@@ -140,6 +142,7 @@ public class RestCommentController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
+    @PreAuthorize("hasAnyRole('ADMIN', 'AUTHOR')")
     public ResponseEntity<SuccessResponse<Void>> deleteComment(
         @Parameter(description = "ID of the comment to delete", required = true, example = "1")
         @PathVariable Integer id

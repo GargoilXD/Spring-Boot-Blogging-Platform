@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -21,15 +22,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("api/tags")
 @Tag(name = "Tags", description = "Tag management APIs for managing blog post tags and categories. Tags can be used to categorize and organize posts for better discoverability.")
 public class RestTagController {
     private final TagService tagService;
-    
-    public RestTagController(TagService tagService) {
-        this.tagService = tagService;
-    }
+
     @GetMapping
     @Operation(
         summary = "Get all tags",
@@ -95,7 +94,11 @@ public class RestTagController {
             content = @Content(schema = @Schema(implementation = String.class))
         )
     })
-    public ResponseEntity<SuccessResponse<Void>> setPostTags(@NotNull(message = "Post ID is required") @Min(1) Integer postId, @Valid @RequestBody List<String> tags) {
+    public ResponseEntity<SuccessResponse<Void>> setPostTags(
+            @NotNull(message = "Post ID is required") @Min(1)
+            Integer postId,
+            @Valid @RequestBody List<String> tags
+    ) {
         tagService.setPostTags(postId, tags);
         return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse<>(HttpStatus.CREATED, "Tags set successfully"));
     }

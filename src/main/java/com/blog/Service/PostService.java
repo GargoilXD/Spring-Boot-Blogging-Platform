@@ -15,16 +15,18 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.validation.annotation.Validated;
 
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 public class PostService {
     private final PostRepository repository;
@@ -47,18 +49,25 @@ public class PostService {
     @Transactional
     @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true)
     public Post save(@NotNull CreatePostDTO dto) {
-        User user = userRepository.findById(dto.userId()).orElseThrow(() -> new EntityNotFoundException("User not found: " + dto.userId()));
-        Post post = dto.toEntity();
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("Authenticated user not found: " + username));
+        Post post = new Post();
+        post.setTitle(dto.title());
+        post.setBody(dto.body());
+        post.setDraft(dto.draft());
         user.addPost(post);
         return repository.save(post);
     }
     @Transactional
     @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true)
     public Post update(@NotNull(message = "Post id is required") @Min(1) Integer postId, @NotNull UpdatePostDTO dto) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("Authenticated user not found: " + username));
         Post post = repository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found: " + postId));
-        User user = userRepository.findById(dto.userId()).orElseThrow(() -> new EntityNotFoundException("User not found: " + dto.userId()));
-        if (!Objects.equals(post.getUser().getId(), user.getId())) throw new EntityNotFoundException("User does not own this post: " + postId);
-        dto.update(post);
+        if (!post.getUser().getId().equals(user.getId())) throw new SecurityException("User does not own this post: " + postId);
+        post.setTitle(dto.title());
+        post.setBody(dto.body());
+        post.setDraft(dto.draft());
         return repository.save(post);
     }
     @Transactional

@@ -8,7 +8,6 @@ import com.blog.DataTransporter.Comment.UpdateCommentDTO;
 import com.blog.Model.Comment;
 
 import java.util.List;
-import java.util.Objects;
 
 import com.blog.Repository.PostRepository;
 import com.blog.Repository.UserRepository;
@@ -16,6 +15,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
@@ -34,21 +34,24 @@ public class CommentService {
     }
     @Caching(evict = {@CacheEvict(cacheNames = "Comment.findByPostId", key = "#dto.postId()")})
     public Comment save(CreateCommentDTO dto) {
-        User user = userRepository.findById(dto.userId()).orElseThrow(() -> new EntityNotFoundException("User not found: " + dto.userId()));
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("Authenticated user not found: " + username));
         Post post = postRepository.findById(dto.postId()).orElseThrow(() -> new EntityNotFoundException("Post not found: " + dto.postId()));
-        Comment comment = dto.toEntity();
+        Comment comment = new Comment();
+        comment.setBody(dto.body());
         user.addComment(comment);
         post.addComment(comment);
         return repository.save(comment);
     }
     @Caching(evict = {@CacheEvict(cacheNames = "Comment.findByPostId", key = "#dto.postId()")})
     public Comment update(@NotNull(message = "Comment id is required") @Min(1) Integer id, @NotNull UpdateCommentDTO dto) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("Authenticated user not found: " + username));
         Comment comment = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Comment not found: " + id));
-        User user = userRepository.findById(dto.userId()).orElseThrow(() -> new EntityNotFoundException("User not found: " + dto.userId()));
         Post post = postRepository.findById(dto.postId()).orElseThrow(() -> new EntityNotFoundException("Post not found: " + dto.postId()));
-        if (!Objects.equals(comment.getUser().getId(), user.getId())) throw new EntityNotFoundException("User does not own this comment: " + id);
-        if (!Objects.equals(comment.getPost().getId(), post.getId())) throw new EntityNotFoundException("Comment does not belong to this post: " + id);
-        dto.update(comment);
+        if (!comment.getUser().getId().equals(user.getId())) throw new SecurityException("User does not own this comment: " + id);
+        if (!comment.getPost().getId().equals(post.getId())) throw new EntityNotFoundException("Comment does not belong to this post: " + id);
+        comment.setBody(dto.body());
         return repository.save(comment);
     }
     @Caching(evict = {@CacheEvict(cacheNames = "Comment.findByPostId", allEntries = true)})

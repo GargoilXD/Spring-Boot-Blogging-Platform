@@ -4,10 +4,13 @@ import com.blog.API.Response.SuccessResponse;
 import com.blog.DataTransporter.Post.CreatePostDTO;
 import com.blog.DataTransporter.Post.UpdatePostDTO;
 import com.blog.DataTransporter.Post.ResponsePostDTO;
+import com.blog.Model.User;
 import com.blog.Service.PostService;
 import com.blog.Model.Post;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,123 +30,150 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("RestPostController Unit Tests")
 class RestPostControllerTest {
-
-    @Mock
-    private PostService postService;
+    @Mock private PostService postService;
+    @Mock private Post mockPost;
+    @Mock private User mockUser;
 
     @InjectMocks
     private RestPostController postController;
 
     private CreatePostDTO createDTO;
-    private Post mockPost;
+    private UpdatePostDTO updateDTO;
 
     @BeforeEach
     void setUp() {
-        createDTO = new CreatePostDTO(1, "Title", "Content", false);
-        mockPost = new Post();
+        createDTO = new CreatePostDTO("Title", "Content", false);
+        updateDTO = new UpdatePostDTO("Updated Title", "Updated Content", false);
     }
-
-    @Test
-    void findById_Success() {
-        when(postService.findById(1)).thenReturn(Optional.of(mockPost));
-
-        ResponseEntity<SuccessResponse<ResponsePostDTO>> response = postController.findById(1);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        verify(postService).findById(1);
+    @Nested
+    @DisplayName("GET /api/posts/{id}")
+    class FindById {
+        @Test
+        @DisplayName("Returns 200 when post exists")
+        void findById_Success() {
+            when(mockPost.getId()).thenReturn(1);
+            when(mockPost.getUser()).thenReturn(mockUser);
+            when(mockUser.getId()).thenReturn(1);
+            when(mockPost.getTitle()).thenReturn("Title");
+            when(mockPost.getBody()).thenReturn("Content");
+            when(mockPost.isDraft()).thenReturn(false);
+            when(mockPost.getCreatedAt()).thenReturn(null);   // DTO handles null safely
+            when(postService.findById(1)).thenReturn(Optional.of(mockPost));
+            ResponseEntity<SuccessResponse<ResponsePostDTO>> response = postController.findById(1);
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertNotNull(response.getBody());
+            verify(postService).findById(1);
+        }
+        @Test
+        @DisplayName("Returns 404 when post does not exist")
+        void findById_NotFound() {
+            when(postService.findById(99)).thenReturn(Optional.empty());
+            ResponseEntity<SuccessResponse<ResponsePostDTO>> response = postController.findById(99);
+            assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        }
     }
-
-    @Test
-    void findById_NotFound() {
-        when(postService.findById(1)).thenReturn(Optional.empty());
-
-        ResponseEntity<SuccessResponse<ResponsePostDTO>> response = postController.findById(1);
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNotNull(response.getBody());
-        verify(postService).findById(1);
+    @Nested
+    @DisplayName("GET /api/posts")
+    class FindAll {
+        @Test
+        @DisplayName("Returns 200 with paginated posts")
+        void findAll_Success() {
+            when(mockPost.getId()).thenReturn(1);
+            when(mockPost.getUser()).thenReturn(mockUser);
+            when(mockUser.getId()).thenReturn(1);
+            when(mockPost.getTitle()).thenReturn("Title");
+            when(mockPost.getBody()).thenReturn("Content");
+            when(mockPost.isDraft()).thenReturn(false);
+            when(mockPost.getCreatedAt()).thenReturn(null);   // DTO handles null safely
+            Pageable pageable = PageRequest.of(0, 10);
+            Page<Post> postPage = new PageImpl<>(List.of(mockPost));
+            when(postService.findAll(pageable)).thenReturn(postPage);
+            ResponseEntity<SuccessResponse<Page<ResponsePostDTO>>> response = postController.findAll(pageable);
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertNotNull(response.getBody());
+        }
     }
+    @Nested
+    @DisplayName("POST /api/posts")
+    class CreatePost {
 
-    @Test
-    void findAll_Success() {
-        Pageable pageable = PageRequest.of(0, 10);
-        Page<Post> postPage = new PageImpl<>(List.of(mockPost));
-        when(postService.findAll(pageable)).thenReturn(postPage);
+        @Test
+        @DisplayName("Returns 201 when post is created")
+        void createPost_Success() {
+            when(mockPost.getId()).thenReturn(1);
+            when(mockPost.getUser()).thenReturn(mockUser);
+            when(mockUser.getId()).thenReturn(1);
+            when(mockPost.getTitle()).thenReturn("Title");
+            when(mockPost.getBody()).thenReturn("Content");
+            when(mockPost.isDraft()).thenReturn(false);
+            when(mockPost.getCreatedAt()).thenReturn(null);   // DTO handles null safely
+            when(postService.save(createDTO)).thenReturn(mockPost);
+            ResponseEntity<SuccessResponse<ResponsePostDTO>> response = postController.createPost(createDTO);
+            assertEquals(HttpStatus.CREATED, response.getStatusCode());
+            assertNotNull(response.getBody());
+            verify(postService).save(createDTO);
+        }
 
-        ResponseEntity<SuccessResponse<Page<ResponsePostDTO>>> response = postController.findAll(pageable);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        verify(postService).findAll(pageable);
+        @Test
+        @DisplayName("Propagates EntityNotFoundException when authenticated user not found")
+        void createPost_Failure_UserNotFound() {
+            when(postService.save(createDTO)).thenThrow(new EntityNotFoundException("Authenticated user not found"));
+            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> postController.createPost(createDTO));
+            assertTrue(ex.getMessage().contains("Authenticated user not found"));
+        }
     }
-
-    @Test
-    void createPost_Success() {
-        when(postService.save(createDTO)).thenReturn(mockPost);
-
-        ResponseEntity<SuccessResponse<ResponsePostDTO>> response = postController.createPost(createDTO);
-
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertNotNull(response.getBody());
-        verify(postService).save(createDTO);
+    @Nested
+    @DisplayName("PUT /api/posts/{id}")
+    class UpdatePost {
+        @Test
+        @DisplayName("Returns 200 when post is updated")
+        void updatePost_Success() {
+            when(mockPost.getId()).thenReturn(1);
+            when(mockPost.getUser()).thenReturn(mockUser);
+            when(mockUser.getId()).thenReturn(1);
+            when(mockPost.getTitle()).thenReturn("Title");
+            when(mockPost.getBody()).thenReturn("Content");
+            when(mockPost.isDraft()).thenReturn(false);
+            when(mockPost.getCreatedAt()).thenReturn(null);
+            when(postService.update(1, updateDTO)).thenReturn(mockPost);
+            ResponseEntity<SuccessResponse<ResponsePostDTO>> response = postController.updatePost(1, updateDTO);
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertNotNull(response.getBody());
+            verify(postService).update(1, updateDTO);
+        }
+        @Test
+        @DisplayName("Propagates EntityNotFoundException from service")
+        void updatePost_Failure_PostNotFound() {
+            doThrow(new EntityNotFoundException("Post not found")).when(postService).update(99, updateDTO);
+            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> postController.updatePost(99, updateDTO));
+            assertEquals("Post not found", ex.getMessage());
+        }
+        @Test
+        @DisplayName("Propagates SecurityException when user is not the owner")
+        void updatePost_Failure_NotOwner() {
+            doThrow(new SecurityException("User does not own this post")).when(postService).update(1, updateDTO);
+            assertThrows(SecurityException.class, () -> postController.updatePost(1, updateDTO));
+        }
     }
-
-    @Test
-    void updatePost_Success() {
-        Integer pathVariableId = 1;
-        UpdatePostDTO dto = new UpdatePostDTO(1, "Title", "Content", false);
-
-        when(postService.update(pathVariableId, dto)).thenReturn(mockPost);
-
-        ResponseEntity<SuccessResponse<ResponsePostDTO>> response =
-                postController.updatePost(pathVariableId, dto);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        verify(postService).update(pathVariableId, dto);
-    }
-
-    @Test
-    void updatePost_Failure_PropagatesException() {
-        Integer pathVariableId = 1;
-        UpdatePostDTO dto = new UpdatePostDTO(1, "Title", "Content", false);
-
-        doThrow(new EntityNotFoundException("Post not found"))
-                .when(postService).update(pathVariableId, dto);
-
-        EntityNotFoundException exception = assertThrows(
-                EntityNotFoundException.class,
-                () -> postController.updatePost(pathVariableId, dto)
-        );
-
-        assertEquals("Post not found", exception.getMessage());
-        verify(postService).update(pathVariableId, dto);
-    }
-
-    @Test
-    void deletePost_Success() {
-        doNothing().when(postService).delete(1);
-
-        ResponseEntity<SuccessResponse<Void>> response = postController.deletePost(1);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        verify(postService).delete(1);
-    }
-
-    @Test
-    void deletePost_Failure_PropagatesException() {
-        doThrow(new EntityNotFoundException("Post not found"))
-                .when(postService).delete(1);
-
-        EntityNotFoundException exception = assertThrows(
-                EntityNotFoundException.class,
-                () -> postController.deletePost(1)
-        );
-
-        assertEquals("Post not found", exception.getMessage());
-        verify(postService).delete(1);
+    @Nested
+    @DisplayName("DELETE /api/posts/{id}")
+    class DeletePost {
+        @Test
+        @DisplayName("Returns 200 when post is deleted")
+        void deletePost_Success() {
+            doNothing().when(postService).delete(1);
+            ResponseEntity<SuccessResponse<Void>> response = postController.deletePost(1);
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            verify(postService).delete(1);
+        }
+        @Test
+        @DisplayName("Propagates EntityNotFoundException from service")
+        void deletePost_Failure_PostNotFound() {
+            doThrow(new EntityNotFoundException("Post not found")).when(postService).delete(99);
+            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> postController.deletePost(99));
+            assertEquals("Post not found", ex.getMessage());
+        }
     }
 }

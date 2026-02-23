@@ -26,9 +26,9 @@ public record RegisterUserDTO(
         username = username.trim();
         email = email.trim();
         gender = switch (gender.trim().toUpperCase()) {
-            case "MALE", "FEMALE", "OTHER" -> String.valueOf(gender.charAt(0)).toUpperCase();
-            case "F", "M" -> gender.trim().toUpperCase();
-            default -> throw new IllegalArgumentException("Invalid gender");
+            case "MALE", "FEMALE", "OTHER", "NOT SPECIFIED" -> String.valueOf(gender.charAt(0)).toUpperCase();
+            case "F", "M", "O", "N" -> gender.trim().toUpperCase();
+            default -> "OTHER";
         };
         if (username.length() < 3) throw new IllegalArgumentException("Username must be at least 3 characters");
         if (password.length() < 8) throw new IllegalArgumentException("Password must be at least 8 characters");
@@ -36,7 +36,7 @@ public record RegisterUserDTO(
     }
 
     public User toEntity() {
-        return new User(null, username, password, fullName, email, gender, null, null, null);
+        return new User(null, username, password, fullName, email, gender, null, null, null, null);
     }
     public RegisterUserDTO withPasswordHash(String newPassword) {
         return new RegisterUserDTO(username, newPassword, fullName, email, gender);

@@ -9,9 +9,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -39,8 +37,20 @@ public class User {
     @Column(name = "gender", nullable = false)
     private String gender;
 
+    public void setGender(String gender) {
+        this.gender = switch (gender.trim().toUpperCase()) {
+            case "MALE", "FEMALE", "OTHER", "NOT SPECIFIED" -> String.valueOf(gender.charAt(0)).toUpperCase();
+            case "F", "M", "O", "N" -> gender.trim().toUpperCase();
+            default -> "OTHER";
+        };
+    }
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    private Role role = Role.READER;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
@@ -52,9 +62,7 @@ public class User {
 
     @PrePersist
     protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
+        if (this.createdAt == null) this.createdAt = LocalDateTime.now();
     }
 
     public void addPost(Post post) {

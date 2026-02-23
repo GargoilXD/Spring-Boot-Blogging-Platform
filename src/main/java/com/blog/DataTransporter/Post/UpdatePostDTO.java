@@ -1,16 +1,11 @@
 package com.blog.DataTransporter.Post;
 
-import com.blog.Model.Post;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-@Schema(description = "Data for updating an existing blog post. All fields are required. The post ID must exist in the system.")
+@Schema(description = "Data for updating an existing blog post. All fields are required. The post ID must exist in the system. Ownership is verified against the authenticated user's JWT token.")
 public record UpdatePostDTO(
-    @Schema(description = "ID of the user who owns the post. Must match the original post author.", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "User ID is required") @Min(1)
-    Integer userId,
     @Schema(description = "Updated title of the blog post. Will be trimmed.", example = "Getting Started with Spring Boot - Updated", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Title is required")
     String title,
@@ -24,10 +19,5 @@ public record UpdatePostDTO(
     public UpdatePostDTO {
         title = title.trim();
         body = body.trim();
-    }
-    public void update(Post post) {
-        post.setTitle(title);
-        post.setBody(body);
-        post.setDraft(draft);
     }
 }

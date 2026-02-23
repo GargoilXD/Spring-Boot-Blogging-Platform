@@ -1,16 +1,11 @@
 package com.blog.DataTransporter.Post;
 
-import com.blog.Model.Post;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-@Schema(description = "Data for creating a new blog post. All fields are required. The post will be assigned a unique ID and creation timestamp automatically.")
+@Schema(description = "Data for creating a new blog post. All fields are required. The post will be assigned a unique ID and creation timestamp automatically. The author is derived from the authenticated JWT token.")
 public record CreatePostDTO(
-    @Schema(description = "ID of the post author. Must reference an existing user in the system.", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "User ID is required") @Min(1)
-    Integer userId,
     @Schema(description = "Title of the blog post. Will be trimmed. Should be concise and descriptive.", example = "Getting Started with Spring Boot", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Title is required")
     String title,
@@ -24,8 +19,5 @@ public record CreatePostDTO(
     public CreatePostDTO {
         title = title.trim();
         body = body.trim();
-    }
-    public Post toEntity() {
-        return new Post(title, body, draft);
     }
 }
