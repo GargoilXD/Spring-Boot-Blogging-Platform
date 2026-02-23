@@ -41,14 +41,12 @@ type Comment {
 }
 
 input CreatePostInput {
-    userId: ID!
     title: String!
     body: String!
     draft: Boolean
 }
 
 input UpdatePostInput {
-    userId: ID!
     postId: ID!
     title: String
     body: String
@@ -64,13 +62,11 @@ input RegisterInput {
 }
 
 input CreateCommentInput {
-    userId: ID!
     postId: ID!
     body: String!
 }
 input UpdateCommentInput {
     id: ID!
-    userId: ID!
     postId: ID!
     body: String!
 }

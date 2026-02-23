@@ -46,7 +46,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
             user.setUsername(ensureUniqueUsername(username));
             user.setEmail(email);
             user.setFullName(name != null ? name : username);
-            user.setGender("Not specified");
+            user.setGender("N");
             user.setPasswordHash("{oauth2}" + googleId);
             user.setRole(Role.READER);
             user.setCreatedAt(LocalDateTime.now());

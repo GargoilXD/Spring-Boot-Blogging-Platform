@@ -249,7 +249,12 @@ mvn spring-boot:run
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/auth/register` | Register a new user |
-| POST | `/api/auth/login` | Authenticate a user |
+| POST | `/api/auth/login` | Authenticate and receive JWT tokens |
+| POST | `/api/auth/refresh` | Refresh access token using refresh token |
+| POST | `/api/auth/logout` | Revoke tokens |
+| GET | `/api/auth/token/inspect` | Decode and inspect JWT claims |
+
+> **Security Architecture:** `userId` is never accepted in request bodies for write operations. The authenticated user is always resolved server-side from the JWT subject claim via `SecurityContextHolder`, then looked up in the database. This prevents client-side user impersonation.
 
 #### Posts
 
@@ -361,10 +366,9 @@ mutation {
   login(username: "johndoe", password: "securePassword123")
 }
 
-# Create a post
+# Create a post (author is derived from Bearer token)
 mutation {
   createPost(input: {
-    authorId: "1"
     title: "My First Post"
     body: "This is the content of my first post."
     draft: false
@@ -393,12 +397,10 @@ mutation {
   deletePost(id: "1")
 }
 
-# Add a comment
+# Add a comment (JWT token determines the author)
 mutation {
   addComment(input: {
-    userId: "1"
     postId: "1"
-    username: "johndoe"
     body: "Great post!"
   })
 }
@@ -454,7 +456,6 @@ CREATE TABLE posts (
 ```json
 {
   "_id": "ObjectId",
-  "userId": "Long",
   "postId": "Long",
   "username": "String",
   "body": "String",

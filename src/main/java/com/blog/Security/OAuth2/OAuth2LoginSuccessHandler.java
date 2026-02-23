@@ -49,7 +49,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             newUser.setEmail(email);
             newUser.setUsername(username);
             newUser.setFullName(name != null ? name : username);
-            newUser.setGender("Not specified");
+            newUser.setGender("N");
             newUser.setPasswordHash("{oauth2}no-local-password");
             newUser.setRole(Role.READER);
             newUser.setCreatedAt(LocalDateTime.now());

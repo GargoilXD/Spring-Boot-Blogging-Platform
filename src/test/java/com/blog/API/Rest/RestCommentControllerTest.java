@@ -8,6 +8,8 @@ import com.blog.Service.CommentService;
 import com.blog.Model.Comment;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,103 +24,166 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("RestCommentController Unit Tests")
 class RestCommentControllerTest {
 
-    @Mock
-    private CommentService commentService;
+    @Mock private CommentService commentService;
 
     @InjectMocks
     private RestCommentController commentController;
 
     private CreateCommentDTO createDTO;
+    private UpdateCommentDTO updateDTO;
     private Comment mockComment;
 
     @BeforeEach
     void setUp() {
-        createDTO = new CreateCommentDTO(1, 1, "Content");
+        createDTO   = new CreateCommentDTO(1, "Content");
+        updateDTO   = new UpdateCommentDTO(1, "Updated Content");
         mockComment = new Comment();
     }
 
-    @Test
-    void getCommentsForPost_Success() {
-        int postId = 1;
-        when(commentService.findByPostId(postId)).thenReturn(List.of(mockComment));
+    // ─── GET /api/comments/post/{postId} ─────────────────────────────────────
 
-        ResponseEntity<SuccessResponse<List<ResponseCommentDTO>>> response =
-                commentController.getCommentsForPost(postId);
+    @Nested
+    @DisplayName("GET /api/comments/post/{postId}")
+    class GetComments {
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        verify(commentService).findByPostId(postId);
+        @Test
+        @DisplayName("Returns 200 with comments for the given post")
+        void getCommentsForPost_Success() {
+            when(commentService.findByPostId(1)).thenReturn(List.of(mockComment));
+
+            ResponseEntity<SuccessResponse<List<ResponseCommentDTO>>> response =
+                commentController.getCommentsForPost(1);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertNotNull(response.getBody());
+            verify(commentService).findByPostId(1);
+        }
+
+        @Test
+        @DisplayName("Returns 200 with empty list when no comments exist")
+        void getCommentsForPost_EmptyList() {
+            when(commentService.findByPostId(99)).thenReturn(List.of());
+
+            ResponseEntity<SuccessResponse<List<ResponseCommentDTO>>> response =
+                commentController.getCommentsForPost(99);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+        }
     }
 
-    @Test
-    void createComment_Success() {
-        when(commentService.save(createDTO)).thenReturn(mockComment);
+    // ─── POST /api/comments ──────────────────────────────────────────────────
 
-        ResponseEntity<SuccessResponse<ResponseCommentDTO>> response = commentController.createComment(createDTO);
+    @Nested
+    @DisplayName("POST /api/comments")
+    class CreateComment {
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertNotNull(response.getBody());
-        verify(commentService).save(createDTO);
-    }
+        @Test
+        @DisplayName("Returns 201 when comment is created")
+        void createComment_Success() {
+            when(commentService.save(createDTO)).thenReturn(mockComment);
 
-    @Test
-    void updateComment_Success() {
-        Integer pathVariableId = 1;
-        UpdateCommentDTO dto = new UpdateCommentDTO(1, 1, "Updated Content");
+            ResponseEntity<SuccessResponse<ResponseCommentDTO>> response =
+                commentController.createComment(createDTO);
 
-        when(commentService.update(pathVariableId, dto)).thenReturn(mockComment);
+            assertEquals(HttpStatus.CREATED, response.getStatusCode());
+            assertNotNull(response.getBody());
+            verify(commentService).save(createDTO);
+        }
 
-        ResponseEntity<SuccessResponse<ResponseCommentDTO>> response = commentController.updateComment(pathVariableId, dto);
+        @Test
+        @DisplayName("Propagates EntityNotFoundException when post not found")
+        void createComment_Failure_PostNotFound() {
+            when(commentService.save(createDTO)).thenThrow(new EntityNotFoundException("Post not found"));
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-
-        // Verify the service was called with the DTO that has the ID from path variable
-        verify(commentService).update(pathVariableId, dto);
-    }
-
-    @Test
-    void updateComment_Failure_PropagatesException() {
-        Integer pathVariableId = 1;
-        UpdateCommentDTO dto = new UpdateCommentDTO(1, 1, "Content");
-
-        doThrow(new EntityNotFoundException("Comment not found"))
-                .when(commentService).update(pathVariableId, dto);
-
-        EntityNotFoundException exception = assertThrows(
+            EntityNotFoundException ex = assertThrows(
                 EntityNotFoundException.class,
-                () -> commentController.updateComment(pathVariableId, dto)
-        );
+                () -> commentController.createComment(createDTO)
+            );
 
-        assertEquals("Comment not found", exception.getMessage());
-        verify(commentService).update(pathVariableId, dto);
+            assertTrue(ex.getMessage().contains("Post not found"));
+        }
+
+        @Test
+        @DisplayName("Propagates EntityNotFoundException when user not found")
+        void createComment_Failure_UserNotFound() {
+            when(commentService.save(createDTO)).thenThrow(new EntityNotFoundException("Authenticated user not found"));
+
+            assertThrows(EntityNotFoundException.class, () -> commentController.createComment(createDTO));
+        }
     }
 
-    @Test
-    void deleteComment_Success() {
-        doNothing().when(commentService).delete(1);
+    // ─── PUT /api/comments/{id} ──────────────────────────────────────────────
 
-        ResponseEntity<SuccessResponse<Void>> response =
-                commentController.deleteComment(1);
+    @Nested
+    @DisplayName("PUT /api/comments/{id}")
+    class UpdateComment {
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        verify(commentService).delete(1);
-    }
+        @Test
+        @DisplayName("Returns 200 when comment is updated")
+        void updateComment_Success() {
+            when(commentService.update(1, updateDTO)).thenReturn(mockComment);
 
-    @Test
-    void deleteComment_Failure_PropagatesException() {
-        doThrow(new EntityNotFoundException("Comment not found"))
-                .when(commentService).delete(1);
+            ResponseEntity<SuccessResponse<ResponseCommentDTO>> response =
+                commentController.updateComment(1, updateDTO);
 
-        EntityNotFoundException exception = assertThrows(
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertNotNull(response.getBody());
+            verify(commentService).update(1, updateDTO);
+        }
+
+        @Test
+        @DisplayName("Propagates EntityNotFoundException from service")
+        void updateComment_Failure_CommentNotFound() {
+            doThrow(new EntityNotFoundException("Comment not found")).when(commentService).update(99, updateDTO);
+
+            EntityNotFoundException ex = assertThrows(
                 EntityNotFoundException.class,
-                () -> commentController.deleteComment(1)
-        );
+                () -> commentController.updateComment(99, updateDTO)
+            );
 
-        assertEquals("Comment not found", exception.getMessage());
-        verify(commentService).delete(1);
+            assertEquals("Comment not found", ex.getMessage());
+        }
+
+        @Test
+        @DisplayName("Propagates SecurityException when user is not the owner")
+        void updateComment_Failure_NotOwner() {
+            doThrow(new SecurityException("User does not own this comment")).when(commentService).update(1, updateDTO);
+
+            assertThrows(SecurityException.class, () -> commentController.updateComment(1, updateDTO));
+        }
+    }
+
+    // ─── DELETE /api/comments/{id} ───────────────────────────────────────────
+
+    @Nested
+    @DisplayName("DELETE /api/comments/{id}")
+    class DeleteComment {
+
+        @Test
+        @DisplayName("Returns 200 when comment is deleted")
+        void deleteComment_Success() {
+            doNothing().when(commentService).delete(1);
+
+            ResponseEntity<SuccessResponse<Void>> response = commentController.deleteComment(1);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            verify(commentService).delete(1);
+        }
+
+        @Test
+        @DisplayName("Propagates EntityNotFoundException from service")
+        void deleteComment_Failure_NotFound() {
+            doThrow(new EntityNotFoundException("Comment not found")).when(commentService).delete(99);
+
+            EntityNotFoundException ex = assertThrows(
+                EntityNotFoundException.class,
+                () -> commentController.deleteComment(99)
+            );
+
+            assertEquals("Comment not found", ex.getMessage());
+        }
     }
 }

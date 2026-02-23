@@ -39,6 +39,14 @@ public class User {
     @Column(name = "gender", nullable = false)
     private String gender;
 
+    public void setGender(String gender) {
+        this.gender = switch (gender.trim().toUpperCase()) {
+            case "MALE", "FEMALE", "OTHER", "NOT SPECIFIED" -> String.valueOf(gender.charAt(0)).toUpperCase();
+            case "F", "M", "O", "N" -> gender.trim().toUpperCase();
+            default -> "OTHER";
+        };
+    }
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
