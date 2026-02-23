@@ -50,7 +50,6 @@ public class RestAdminController {
                         "createdAt", u.getCreatedAt().toString()
                 ))
                 .toList();
-
         return ResponseEntity.ok(
             new SuccessResponse<>(HttpStatus.OK, "Users retrieved successfully", users)
         );
@@ -72,25 +71,26 @@ public class RestAdminController {
         try {
             newRole = Role.valueOf(role.toUpperCase());
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(
-                new SuccessResponse<>(HttpStatus.BAD_REQUEST, "Invalid role. Valid values: ADMIN, AUTHOR, READER")
-            );
+            return ResponseEntity.badRequest().body(new SuccessResponse<>(HttpStatus.BAD_REQUEST, "Invalid role. Valid values: ADMIN, AUTHOR, READER"));
         }
         User user = userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("User not found: " + id));
         Role previousRole = user.getRole();
         user.setRole(newRole);
         userRepository.save(user);
-
         return ResponseEntity.ok(new SuccessResponse<>(HttpStatus.OK, "Role updated from " + previousRole + " to " + newRole,
-            Map.of("userId", id, "username", user.getUsername(), "previousRole", previousRole.name(), "newRole", newRole.name())
+            Map.of(
+                    "userId", id,
+                    "username", user.getUsername(),
+                    "previousRole", previousRole.name(),
+                    "newRole", newRole.name()
+            )
         ));
     }
     @GetMapping("/security/failures")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(
         summary = "Login failure report",
-        description = "Returns per-user login failure counts for brute-force detection. " +
-                      "Threshold for flagging: 5 consecutive failures. ADMIN only."
+        description = "Returns per-user login failure counts for brute-force detection. Threshold for flagging: 5 consecutive failures. ADMIN only."
     )
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Failure report generated"),
@@ -98,7 +98,6 @@ public class RestAdminController {
     })
     public ResponseEntity<SuccessResponse<Map<String, Object>>> getFailureReport() {
         Map<String, Integer> failures = securityEventLogger.getFailureSummary();
-
         long flaggedUsers = failures.values().stream().filter(count -> count >= 5).count();
         Map<String, Object> report = Map.of(
             "totalUsersWithFailures", failures.size(),

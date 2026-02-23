@@ -13,12 +13,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "Authentication", description = "JWT authentication: login, register, token refresh, logout, and token inspection")
@@ -26,10 +28,6 @@ public class RestAuthenticationController {
     private final AuthenticationService authService;
     private final JwtService jwtService;
 
-    public RestAuthenticationController(AuthenticationService authService, JwtService jwtService) {
-        this.authService = authService;
-        this.jwtService  = jwtService;
-    }
     @PostMapping("/login")
     @Operation(
         summary = "Authenticate user",

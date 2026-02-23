@@ -30,7 +30,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
+@EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final BlogUserDetailsService userDetailsService;
@@ -82,9 +82,7 @@ public class SecurityConfig {
                 .csrfTokenRequestHandler(csrfHandler)
             )
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
@@ -101,22 +99,17 @@ public class SecurityConfig {
                 .requestMatchers("/web/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .oauth2Login(oauth2 -> oauth2
-                .successHandler(oAuth2LoginSuccessHandler)
-            )
+            .oauth2Login(oauth2 -> oauth2.successHandler(oAuth2LoginSuccessHandler))
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-
         List<String> origins  = Arrays.asList(allowedOriginsRaw.split(","));
         List<String> methods  = Arrays.asList(allowedMethodsRaw.split(","));
         List<String> headers  = Arrays.asList(allowedHeadersRaw.split(","));
-
         config.setAllowedOrigins(origins);
         config.setAllowedMethods(methods);
         config.setAllowedHeaders(headers);
@@ -137,8 +130,7 @@ public class SecurityConfig {
         return provider;
     }
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
-            throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
     @Bean

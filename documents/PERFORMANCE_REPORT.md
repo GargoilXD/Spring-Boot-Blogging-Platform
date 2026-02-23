@@ -20,8 +20,8 @@ All measurements below reflect the optimized baseline after applying Spring Cach
 | Cache | Spring Cache (ConcurrentMapCache) | In-process, zero-latency for cache hits |
 | Token Blacklist | `ConcurrentHashMap` | O(1) revocation lookup (DSA: hash map) |
 | Refresh Token Store | `HashMap` + TTL | O(1) store/evict/validate |
-| DB — Relational | PostgreSQL | Users, Posts, Comments |
-| DB — Document | MongoDB | PostTags |
+| DB Relational | PostgreSQL | Users, Posts, Comments |
+| DB Document | MongoDB | PostTags |
 | API | REST + GraphQL | Both secured via JWT |
 
 ---
@@ -146,25 +146,3 @@ As of this version, `userId` has been removed from `CreatePostDTO`, `UpdatePostD
 | `reset(username)` | `ConcurrentHashMap.remove` | O(1) |
 
 This prevents brute-force attacks at O(1) overhead per authentication attempt.
-
----
-
-## Throughput and Scalability Notes
-
-- At low concurrency (1–5 simultaneous users), all endpoints respond well within 200 ms.
-- BCrypt bounds login throughput; horizontal scaling (multiple instances) is the recommended path for high-login-volume scenarios.
-- The in-memory caches (token blacklist, refresh store, Spring Cache) are not shared across instances — a distributed cache (Redis) or sticky sessions would be required in a multi-node deployment.
-- GraphQL queries incur a small parsing overhead (~5 ms) compared to equivalent REST queries but offer field-level payload reduction for client-heavy workloads.
-
----
-
-## Recommendations
-
-| Area | Recommendation | Priority |
-|---|---|---|
-| Cache store | Replace `ConcurrentMapCache` with Redis for multi-instance deployments | Medium |
-| Token blacklist | Add TTL-based eviction or Redis-backed blacklist | Medium |
-| BCrypt strength | Increase to 12 for production if login throughput allows | Low |
-| Rate limiting | Add IP-level rate limiting (e.g., Bucket4j) for auth endpoints | High |
-| DB indexing | Ensure `username`, `post_id`, `user_id` columns are indexed | High |
-| Logging | Replace in-memory `SecurityEventService` with a persistent audit log | Medium |

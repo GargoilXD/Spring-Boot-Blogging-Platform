@@ -51,7 +51,10 @@ public class PostService {
     public Post save(@NotNull CreatePostDTO dto) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("Authenticated user not found: " + username));
-        Post post = dto.toEntity();
+        Post post = new Post();
+        post.setTitle(dto.title());
+        post.setBody(dto.body());
+        post.setDraft(dto.draft());
         user.addPost(post);
         return repository.save(post);
     }
@@ -62,7 +65,9 @@ public class PostService {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("Authenticated user not found: " + username));
         Post post = repository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found: " + postId));
         if (!post.getUser().getId().equals(user.getId())) throw new SecurityException("User does not own this post: " + postId);
-        dto.update(post);
+        post.setTitle(dto.title());
+        post.setBody(dto.body());
+        post.setDraft(dto.draft());
         return repository.save(post);
     }
     @Transactional

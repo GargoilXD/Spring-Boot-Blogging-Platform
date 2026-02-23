@@ -1,6 +1,5 @@
 package com.blog.DataTransporter.Comment;
 
-import com.blog.Model.Comment;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -17,8 +16,5 @@ public record UpdateCommentDTO(
 ) {
     public UpdateCommentDTO {
         body = body.trim();
-    }
-    public void update(Comment comment) {
-        comment.setBody(body);
     }
 }

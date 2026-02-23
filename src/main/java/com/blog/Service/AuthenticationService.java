@@ -19,7 +19,6 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
-
     private final UserRepository repository;
     private final PasswordHasher passwordHasher;
     private final JwtService jwtService;
@@ -29,9 +28,7 @@ public class AuthenticationService {
 
     public Map<String, String> login(String username, String password) {
         User user = repository.findByUsername(username.trim()).orElseThrow(() -> new AuthenticationException("Invalid credentials"));
-        if (!passwordHasher.verifyPassword(password, user.getPasswordHash())) {
-            throw new AuthenticationException("Invalid credentials");
-        }
+        if (!passwordHasher.verifyPassword(password, user.getPasswordHash())) throw new AuthenticationException("Invalid credentials");
         UserDetails userDetails = userDetailsService.loadUserByUsername(username.trim());
         String accessToken  = jwtService.generateAccessToken(userDetails);
         String refreshToken = jwtService.generateRefreshToken(userDetails);
@@ -75,11 +72,7 @@ public class AuthenticationService {
         );
     }
     public void logout(String accessToken, String refreshToken) {
-        if (accessToken != null) {
-            tokenBlacklistService.revoke(accessToken);
-        }
-        if (refreshToken != null) {
-            refreshTokenService.evict(refreshToken);
-        }
+        if (accessToken != null) tokenBlacklistService.revoke(accessToken);
+        if (refreshToken != null) refreshTokenService.evict(refreshToken);
     }
 }

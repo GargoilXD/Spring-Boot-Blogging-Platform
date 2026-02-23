@@ -1,4 +1,4 @@
-package com.blog.Security;
+package com.blog.Security.OAuth2;
 
 import com.blog.Model.Role;
 import com.blog.Model.User;

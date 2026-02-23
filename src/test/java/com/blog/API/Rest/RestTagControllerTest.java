@@ -25,7 +25,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class RestTagControllerTest {
-
     @Mock
     private TagService tagService;
 
@@ -44,128 +43,76 @@ class RestTagControllerTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<PostTags> postTagsPage = new PageImpl<>(List.of(mockPostTags));
         when(tagService.findAll(pageable)).thenReturn(postTagsPage);
-
         ResponseEntity<SuccessResponse<Page<ResponseTagsDTO>>> response = tagController.findAll(pageable);
-
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         verify(tagService).findAll(pageable);
     }
-
     @Test
     void findByPostId_Success() {
         when(tagService.findByPostId(1)).thenReturn(List.of("tag1", "tag2"));
-
         ResponseEntity<SuccessResponse<List<String>>> response = tagController.findByPostId(1);
-
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         verify(tagService).findByPostId(1);
     }
-
     @Test
     void setPostTags_Success() {
         doNothing().when(tagService).setPostTags(1, List.of("tag1", "tag2"));
-
         ResponseEntity<SuccessResponse<Void>> response = tagController.setPostTags(1, List.of("tag1", "tag2"));
-
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
         verify(tagService).setPostTags(1, List.of("tag1", "tag2"));
     }
-
     @Test
     void setPostTags_Failure_PropagatesException() {
-        doThrow(new EntityNotFoundException("Post not found"))
-                .when(tagService).setPostTags(1, List.of("tag1", "tag2"));
-
-        EntityNotFoundException exception = assertThrows(
-                EntityNotFoundException.class,
-                () -> tagController.setPostTags(1, List.of("tag1", "tag2"))
-        );
-
+        doThrow(new EntityNotFoundException("Post not found")).when(tagService).setPostTags(1, List.of("tag1", "tag2"));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> tagController.setPostTags(1, List.of("tag1", "tag2")));
         assertEquals("Post not found", exception.getMessage());
         verify(tagService).setPostTags(1, List.of("tag1", "tag2"));
     }
-
     @Test
     void addTagsToPost_Success() {
-        Integer pathVariableId = 1;
-
         doNothing().when(tagService).addTagsToPost(1, List.of("tag3"));
-
-        ResponseEntity<SuccessResponse<Void>> response =
-                tagController.addTagsToPost(pathVariableId, List.of("tag3"));
-
+        ResponseEntity<SuccessResponse<Void>> response = tagController.addTagsToPost(1, List.of("tag3"));
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        verify(tagService).addTagsToPost(pathVariableId, List.of("tag3"));
+        verify(tagService).addTagsToPost(1, List.of("tag3"));
     }
-
     @Test
     void addTagsToPost_Failure_PropagatesException() {
-        Integer pathVariableId = 1;
-        doThrow(new EntityNotFoundException("Post not found"))
-                .when(tagService).addTagsToPost(pathVariableId, List.of("tag3"));
-
-        EntityNotFoundException exception = assertThrows(
-                EntityNotFoundException.class,
-                () -> tagController.addTagsToPost(pathVariableId, List.of("tag3"))
-        );
-
+        doThrow(new EntityNotFoundException("Post not found")).when(tagService).addTagsToPost(1, List.of("tag3"));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> tagController.addTagsToPost(1, List.of("tag3")));
         assertEquals("Post not found", exception.getMessage());
-        verify(tagService).addTagsToPost(pathVariableId, List.of("tag3"));
+        verify(tagService).addTagsToPost(1, List.of("tag3"));
     }
-
     @Test
     void removeTagsFromPost_Success() {
-        Integer pathVariableId = 1;
-        doNothing().when(tagService).removeTagsFromPost(pathVariableId, List.of("tag3"));
-
-        ResponseEntity<SuccessResponse<Void>> response =
-                tagController.removeTagsFromPost(pathVariableId, List.of("tag3"));
-
+        doNothing().when(tagService).removeTagsFromPost(1, List.of("tag3"));
+        ResponseEntity<SuccessResponse<Void>> response = tagController.removeTagsFromPost(1, List.of("tag3"));
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        verify(tagService).removeTagsFromPost(pathVariableId, List.of("tag3"));
+        verify(tagService).removeTagsFromPost(1, List.of("tag3"));
     }
-
     @Test
     void removeTagsFromPost_Failure_PropagatesException() {
-        Integer pathVariableId = 1;
-        doThrow(new EntityNotFoundException("Post not found"))
-                .when(tagService).removeTagsFromPost(pathVariableId, List.of("tag3"));
-
-        EntityNotFoundException exception = assertThrows(
-                EntityNotFoundException.class,
-                () -> tagController.removeTagsFromPost(pathVariableId, List.of("tag3"))
-        );
-
+        doThrow(new EntityNotFoundException("Post not found")).when(tagService).removeTagsFromPost(1, List.of("tag3"));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> tagController.removeTagsFromPost(1, List.of("tag3")));
         assertEquals("Post not found", exception.getMessage());
-        verify(tagService).removeTagsFromPost(pathVariableId, List.of("tag3"));
+        verify(tagService).removeTagsFromPost(1, List.of("tag3"));
     }
-
     @Test
     void deleteByPostId_Success() {
         doNothing().when(tagService).deleteByPostId(1);
-
         ResponseEntity<SuccessResponse<Void>> response = tagController.deleteByPostId(1);
-
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         verify(tagService).deleteByPostId(1);
     }
-
     @Test
     void deleteByPostId_Failure_PropagatesException() {
-        doThrow(new EntityNotFoundException("Failed to Delete All Tags For Post"))
-                .when(tagService).deleteByPostId(1);
-
-        EntityNotFoundException exception = assertThrows(
-                EntityNotFoundException.class,
-                () -> tagController.deleteByPostId(1)
-        );
-
+        doThrow(new EntityNotFoundException("Failed to Delete All Tags For Post")).when(tagService).deleteByPostId(1);
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> tagController.deleteByPostId(1));
         assertTrue(exception.getMessage().contains("Failed to Delete All Tags For Post"));
         verify(tagService).deleteByPostId(1);
     }

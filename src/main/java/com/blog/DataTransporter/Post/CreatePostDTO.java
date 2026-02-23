@@ -1,6 +1,5 @@
 package com.blog.DataTransporter.Post;
 
-import com.blog.Model.Post;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,8 +19,5 @@ public record CreatePostDTO(
     public CreatePostDTO {
         title = title.trim();
         body = body.trim();
-    }
-    public Post toEntity() {
-        return new Post(title, body, draft);
     }
 }

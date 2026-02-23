@@ -4,8 +4,6 @@
 
 This document provides comprehensive documentation for all unit tests across the Spring Boot Blogging Platform. Tests cover the service layer, REST controller layer, GraphQL resolver layer, and security components. All tests use JUnit 5 and Mockito, with `@ExtendWith(MockitoExtension.class)` for lightweight, fast execution without starting a Spring context.
 
-A key architectural note: `userId` has been removed from all request DTOs (`CreatePostDTO`, `UpdatePostDTO`, `CreateCommentDTO`, `UpdateCommentDTO`). The authenticated user is now resolved from the `SecurityContextHolder` via JWT token claims. Tests that exercise `PostService` and `CommentService` mock the `SecurityContext` and `Authentication` objects accordingly.
-
 ---
 
 ## Test Coverage Summary
@@ -328,15 +326,3 @@ mvn test -Dtest=JwtServiceTest#tamperedToken_IsRejected
 ```bash
 mvn test -Dtest="PostServiceTest,CommentServiceTest,AuthenticationServiceTest"
 ```
-
----
-
-## DTO Security Architecture Note
-
-`userId` has been intentionally removed from all mutating DTOs. The authenticated user is resolved inside the service layer using `SecurityContextHolder.getContext().getAuthentication().getName()` and then looked up via `UserRepository.findByUsername()`. This ensures:
-
-- Clients cannot impersonate other users by supplying a different `userId`
-- Ownership is always verified against the JWT-authenticated principal
-- The API surface is smaller and simpler
-
-Tests that cover `PostService.save/update` and `CommentService.save/update` mock both the `SecurityContext` and `Authentication` beans and install them via `SecurityContextHolder.setContext()`, cleaned up in `@AfterEach`.

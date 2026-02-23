@@ -50,7 +50,7 @@ public class SecurityEventService {
         return Collections.unmodifiableList(all.subList(start, all.size()));
     }
     public List<SecurityEvent> getEventsByType(String type) {
-        return eventLog.stream().filter(e -> e.type().equalsIgnoreCase(type)).toList();
+        return eventLog.stream().filter(e -> e.getType().equalsIgnoreCase(type)).toList();
     }
     private void record(String type, String username, String ip, String detail) {
         SecurityEvent event = new SecurityEvent(type, username, ip, detail, Instant.now());

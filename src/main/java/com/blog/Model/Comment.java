@@ -35,8 +35,6 @@ public class Comment {
 
     @PrePersist
     protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
+        if (this.createdAt == null) this.createdAt = LocalDateTime.now();
     }
 }

@@ -35,7 +35,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("PostService Unit Tests")
 class PostServiceTest {
-
     @Mock private PostRepository    repository;
     @Mock private UserRepository    userRepository;
     @Mock private CommentRepository commentRepository;
@@ -55,9 +54,6 @@ class PostServiceTest {
     void setUp() {
         createDTO = new CreatePostDTO("Title", "Content", false);
         updateDTO = new UpdatePostDTO("Updated Title", "Updated Content", false);
-
-//        when(securityContext.getAuthentication()).thenReturn(authentication);
-//        when(authentication.getName()).thenReturn("testuser");
         SecurityContextHolder.setContext(securityContext);
     }
 
@@ -65,13 +61,9 @@ class PostServiceTest {
     void tearDown() {
         SecurityContextHolder.clearContext();
     }
-
-    // ─── findById ────────────────────────────────────────────────────────────
-
     @Nested
     @DisplayName("findById")
     class FindById {
-
         @Test
         @DisplayName("Returns post when it exists")
         void findById_Success() {
@@ -80,7 +72,6 @@ class PostServiceTest {
             assertTrue(result.isPresent());
             verify(repository).findById(1);
         }
-
         @Test
         @DisplayName("Returns empty Optional when post is not found")
         void findById_NotFound() {
@@ -89,26 +80,19 @@ class PostServiceTest {
             assertFalse(result.isPresent());
         }
     }
-
-    // ─── findAll ─────────────────────────────────────────────────────────────
-
     @Nested
     @DisplayName("findAll")
     class FindAll {
-
         @Test
         @DisplayName("Returns paginated posts")
         void findAll_Success() {
             Pageable pageable = PageRequest.of(0, 10);
             Page<Post> postPage = new PageImpl<>(List.of(post));
             when(repository.findAll(pageable)).thenReturn(postPage);
-
             Page<Post> result = postService.findAll(pageable);
-
             assertNotNull(result);
             assertEquals(1, result.getContent().size());
         }
-
         @Test
         @DisplayName("Returns empty page when no posts exist")
         void findAll_EmptyPage() {
@@ -117,20 +101,15 @@ class PostServiceTest {
             assertTrue(postService.findAll(pageable).isEmpty());
         }
     }
-
-    // ─── count ───────────────────────────────────────────────────────────────
-
     @Nested
     @DisplayName("count")
     class Count {
-
         @Test
         @DisplayName("Returns total post count")
         void count_Success() {
             when(repository.count()).thenReturn(5L);
             assertEquals(5L, postService.count());
         }
-
         @Test
         @DisplayName("Returns zero when no posts exist")
         void count_Zero() {
@@ -138,115 +117,89 @@ class PostServiceTest {
             assertEquals(0L, postService.count());
         }
     }
-
-    // ─── save ────────────────────────────────────────────────────────────────
-
     @Nested
     @DisplayName("save")
     class Save {
-
         @Test
         @DisplayName("Creates post using authenticated user from SecurityContext")
         void save_Success() {
+            when(securityContext.getAuthentication()).thenReturn(authentication);
             when(authentication.getName()).thenReturn("testuser");
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
             when(repository.save(any(Post.class))).thenReturn(post);
-
             Post result = postService.save(createDTO);
-
             assertNotNull(result);
             verify(userRepository).findByUsername("testuser");
             verify(user).addPost(any(Post.class));
             verify(repository).save(any(Post.class));
         }
-
         @Test
         @DisplayName("Throws EntityNotFoundException when authenticated user not found in DB")
         void save_Failure_UserNotFound() {
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.getName()).thenReturn("testuser");
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.empty());
-
-            EntityNotFoundException ex = assertThrows(
-                EntityNotFoundException.class,
-                () -> postService.save(createDTO)
-            );
-
+            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> postService.save(createDTO));
             assertTrue(ex.getMessage().contains("Authenticated user not found"));
             verify(repository, never()).save(any());
         }
     }
-
-    // ─── update ──────────────────────────────────────────────────────────────
-
     @Nested
     @DisplayName("update")
     class Update {
-
         @Test
         @DisplayName("Updates post when authenticated user is the owner")
         void update_Success() {
+            when(securityContext.getAuthentication()).thenReturn(authentication);
             when(authentication.getName()).thenReturn("testuser");
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
             when(repository.findById(1)).thenReturn(Optional.of(post));
             when(user.getId()).thenReturn(42);
             when(post.getUser()).thenReturn(user);
             when(repository.save(post)).thenReturn(post);
-
             Post result = postService.update(1, updateDTO);
-
             assertNotNull(result);
             verify(repository).save(post);
         }
-
         @Test
         @DisplayName("Throws EntityNotFoundException when authenticated user not found in DB")
         void update_Failure_UserNotFound() {
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.getName()).thenReturn("testuser");
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.empty());
-
-            EntityNotFoundException ex = assertThrows(
-                EntityNotFoundException.class,
-                () -> postService.update(1, updateDTO)
-            );
-
+            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> postService.update(1, updateDTO));
             assertTrue(ex.getMessage().contains("Authenticated user not found"));
             verify(repository, never()).save(any());
         }
-
         @Test
         @DisplayName("Throws EntityNotFoundException when post does not exist")
         void update_Failure_PostNotFound() {
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.getName()).thenReturn("testuser");
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
             when(repository.findById(99)).thenReturn(Optional.empty());
-
-            EntityNotFoundException ex = assertThrows(
-                EntityNotFoundException.class,
-                () -> postService.update(99, updateDTO)
-            );
-
+            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> postService.update(99, updateDTO));
             assertTrue(ex.getMessage().contains("Post not found"));
             verify(repository, never()).save(any());
         }
-
         @Test
         @DisplayName("Throws SecurityException when authenticated user does not own the post")
         void update_Failure_NotOwner() {
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.getName()).thenReturn("testuser");
             User postOwner = mock(User.class);
             when(postOwner.getId()).thenReturn(999);
             when(user.getId()).thenReturn(1);
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
             when(repository.findById(1)).thenReturn(Optional.of(post));
             when(post.getUser()).thenReturn(postOwner);
-
             assertThrows(SecurityException.class, () -> postService.update(1, updateDTO));
             verify(repository, never()).save(any());
         }
     }
-
-    // ─── delete ──────────────────────────────────────────────────────────────
-
     @Nested
     @DisplayName("delete")
     class Delete {
-
         @Test
         @DisplayName("Deletes post and all associated data")
         void delete_Success() {
@@ -254,24 +207,16 @@ class PostServiceTest {
             doNothing().when(tagService).deleteByPostId(1);
             doNothing().when(commentRepository).deleteByPostId(1);
             doNothing().when(repository).deleteById(1);
-
             assertDoesNotThrow(() -> postService.delete(1));
-
             verify(tagService).deleteByPostId(1);
             verify(commentRepository).deleteByPostId(1);
             verify(repository).deleteById(1);
         }
-
         @Test
         @DisplayName("Throws EntityNotFoundException when post does not exist")
         void delete_Failure_PostNotFound() {
             when(repository.findById(99)).thenReturn(Optional.empty());
-
-            EntityNotFoundException ex = assertThrows(
-                EntityNotFoundException.class,
-                () -> postService.delete(99)
-            );
-
+            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> postService.delete(99));
             assertTrue(ex.getMessage().contains("Post not found"));
             verify(tagService, never()).deleteByPostId(anyInt());
             verify(commentRepository, never()).deleteByPostId(anyInt());

@@ -37,7 +37,8 @@ public class CommentService {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("Authenticated user not found: " + username));
         Post post = postRepository.findById(dto.postId()).orElseThrow(() -> new EntityNotFoundException("Post not found: " + dto.postId()));
-        Comment comment = dto.toEntity();
+        Comment comment = new Comment();
+        comment.setBody(dto.body());
         user.addComment(comment);
         post.addComment(comment);
         return repository.save(comment);
@@ -50,7 +51,7 @@ public class CommentService {
         Post post = postRepository.findById(dto.postId()).orElseThrow(() -> new EntityNotFoundException("Post not found: " + dto.postId()));
         if (!comment.getUser().getId().equals(user.getId())) throw new SecurityException("User does not own this comment: " + id);
         if (!comment.getPost().getId().equals(post.getId())) throw new EntityNotFoundException("Comment does not belong to this post: " + id);
-        dto.update(comment);
+        comment.setBody(dto.body());
         return repository.save(comment);
     }
     @Caching(evict = {@CacheEvict(cacheNames = "Comment.findByPostId", allEntries = true)})

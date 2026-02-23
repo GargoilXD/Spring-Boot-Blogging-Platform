@@ -16,26 +16,22 @@ public class CsrfDemoController {
     @GetMapping("/csrf-demo")
     @Operation(
         summary = "Get CSRF token",
-        description = "Returns the current CSRF token. Send this value as the 'X-XSRF-TOKEN' " +
-                      "header on any POST/PUT/DELETE request to /web/** endpoints."
+        description = "Returns the current CSRF token. Send this value as the 'X-XSRF-TOKEN' header on any POST/PUT/DELETE request to /web/** endpoints."
     )
     public ResponseEntity<Map<String, String>> getCsrfToken(HttpServletRequest request) {
         CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
-
-        if (csrfToken == null) {
-            return ResponseEntity.ok(Map.of(
+        if (csrfToken == null) return ResponseEntity.ok(
+            Map.of(
                 "message",    "CSRF is disabled for /api/** (stateless JWT API)",
                 "csrfToken",  "N/A",
                 "headerName", "N/A"
-            ));
-        }
-
+            )
+        );
         return ResponseEntity.ok(Map.of(
             "csrfToken",    csrfToken.getToken(),
             "headerName",   csrfToken.getHeaderName(),    // "X-XSRF-TOKEN"
-            "parameterName", csrfToken.getParameterName(), // "_csrf"
-            "note", "Include this token as the '" + csrfToken.getHeaderName() +
-                    "' header on POST/PUT/DELETE requests to /web/** endpoints"
+            "parameterName", csrfToken.getParameterName(),    // "_csrf"
+            "note", "Include this token as the '" + csrfToken.getHeaderName() + "' header on POST/PUT/DELETE requests to /web/** endpoints"
         ));
     }
     @PostMapping("/csrf-demo/submit")

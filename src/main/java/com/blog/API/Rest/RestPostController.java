@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("api/posts")
 @Validated
@@ -28,9 +30,6 @@ import org.springframework.web.bind.annotation.*;
 public class RestPostController {
     private final PostService postService;
 
-    public RestPostController(PostService postService) {
-        this.postService = postService;
-    }
     @GetMapping("/{id}")
     @Operation(
         summary = "Get post by ID",
