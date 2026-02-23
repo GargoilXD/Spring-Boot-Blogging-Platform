@@ -29,7 +29,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final JwtService jwtService;
     private final RefreshTokenService refreshTokenService;
 
-    private static final String FRONTEND_REDIRECT_URL = "http://localhost:3000/oauth2/callback";
+    private static final String FRONTEND_REDIRECT_URL = "http://localhost:8080/oauth2/callback";
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
