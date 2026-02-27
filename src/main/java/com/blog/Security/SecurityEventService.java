@@ -1,6 +1,5 @@
 package com.blog.Security;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -9,11 +8,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
-@Slf4j
 @Service
 public class SecurityEventService {
     private static final int MAX_EVENTS = 1000;
     private final ConcurrentLinkedDeque<SecurityEvent> eventLog = new ConcurrentLinkedDeque<>();
+
     public void loginSuccess(String username, String ipAddress) {
         record("LOGIN_SUCCESS", username, ipAddress, "User authenticated successfully");
     }
@@ -45,7 +44,7 @@ public class SecurityEventService {
         return List.copyOf(eventLog);
     }
     public List<SecurityEvent> getRecentEvents(int n) {
-        List<SecurityEvent> all = new ArrayList<>(eventLog);
+        List<SecurityEvent> all   = new ArrayList<>(eventLog);
         int start = Math.max(0, all.size() - n);
         return Collections.unmodifiableList(all.subList(start, all.size()));
     }
@@ -58,6 +57,5 @@ public class SecurityEventService {
             eventLog.pollFirst();
         }
         eventLog.addLast(event);
-        log.info("[SecurityEvent] type={} user={} ip={} detail={}", type, username, ip, detail);
     }
 }

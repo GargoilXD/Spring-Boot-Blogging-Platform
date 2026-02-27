@@ -23,14 +23,23 @@ import org.springframework.cache.annotation.Cacheable;
 public class TagService {
     final TagRepository repository;
     final PostRepository postRepository;
+    final PerformanceMetricsService metricsService;
 
     @Cacheable(cacheNames = "PostTags.findAll", key = "{#pageable.pageNumber, #pageable.pageSize, #pageable.sort}")
     public Page<PostTags> findAll(Pageable pageable) {
-        return repository.findAll(pageable);
+        long start = System.currentTimeMillis();
+        Page<PostTags> result = repository.findAll(pageable);
+        metricsService.recordLatency("tag.findAll", System.currentTimeMillis() - start);
+        metricsService.incrementCounter("tag.findAll");
+        return result;
     }
     @Cacheable(cacheNames = "PostTags.findByPostId", key = "#postId")
     public List<String> findByPostId(int postId) {
-        return repository.findByPostId(postId).map(PostTags::getTags).orElse(Collections.emptyList());
+        long start = System.currentTimeMillis();
+        List<String> result = repository.findByPostId(postId).map(PostTags::getTags).orElse(Collections.emptyList());
+        metricsService.recordLatency("tag.findByPostId", System.currentTimeMillis() - start);
+        metricsService.incrementCounter("tag.findByPostId");
+        return result;
     }
     @Cacheable(cacheNames = "PostTags.count")
     public long count() {
@@ -41,27 +50,34 @@ public class TagService {
             @CacheEvict(cacheNames = {"PostTags.findAll", "PostTags.count"}, allEntries = true)
     })
     public void setPostTags(@NotNull(message = "Post ID is required") @Min(1) Integer postId, @NotEmpty(message = "Tags are required") List<String> tags) {
+        long start = System.currentTimeMillis();
         postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found: " + postId));
         repository.findByPostId(postId).ifPresent(repository::delete);
         repository.save(new PostTags(null, postId, tags));
+        metricsService.recordLatency("tag.setPostTags", System.currentTimeMillis() - start);
+        metricsService.incrementCounter("tag.setPostTags");
     }
     @Caching(evict = {
             @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#dto.postId"),
             @CacheEvict(cacheNames = {"PostTags.findAll", "PostTags.count"}, allEntries = true)
     })
     public void addTagsToPost(@NotNull(message = "Post ID is required") @Min(1) Integer postId, @NotEmpty(message = "Tags are required") List<String> tags) {
+        long start = System.currentTimeMillis();
         postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found: " + postId));
         PostTags existing = repository.findByPostId(postId).orElseThrow(() -> new EntityNotFoundException("Failed to Add Tags For Post:" + postId));
         Set<String> currentTags = new HashSet<>(existing.getTags());
         currentTags.addAll(tags);
         existing.setTags(new ArrayList<>(currentTags));
         repository.save(existing);
+        metricsService.recordLatency("tag.addTagsToPost", System.currentTimeMillis() - start);
+        metricsService.incrementCounter("tag.addTagsToPost");
     }
     @Caching(evict = {
             @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#dto.postId"),
             @CacheEvict(cacheNames = {"PostTags.findAll", "PostTags.count"}, allEntries = true)
     })
     public void removeTagsFromPost(@NotNull(message = "Post ID is required") @Min(1) Integer postId, @NotEmpty(message = "Tags are required") List<String> tags) {
+        long start = System.currentTimeMillis();
         postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found: " + postId));
         PostTags existing = repository.findByPostId(postId).orElseThrow(() -> new EntityNotFoundException("Failed to Remove Tags For Post:" + postId));
         Set<String> currentTags = new HashSet<>(existing.getTags());
@@ -71,13 +87,18 @@ public class TagService {
             existing.setTags(new ArrayList<>(currentTags));
             repository.save(existing);
         }
+        metricsService.recordLatency("tag.removeTagsFromPost", System.currentTimeMillis() - start);
+        metricsService.incrementCounter("tag.removeTagsFromPost");
     }
     @Caching(evict = {
             @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#postId"),
             @CacheEvict(cacheNames = {"PostTags.findAll", "PostTags.count"}, allEntries = true)
     })
     public void deleteByPostId(int postId) {
+        long start = System.currentTimeMillis();
         repository.findByPostId(postId).orElseThrow(() -> new EntityNotFoundException("Failed to Delete All Tags For Post:" + postId));
         repository.deleteByPostId(postId);
+        metricsService.recordLatency("tag.deleteByPostId", System.currentTimeMillis() - start);
+        metricsService.incrementCounter("tag.deleteByPostId");
     }
 }
