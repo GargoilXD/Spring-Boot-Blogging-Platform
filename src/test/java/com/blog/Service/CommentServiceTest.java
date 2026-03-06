@@ -22,7 +22,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,8 +52,6 @@ class CommentServiceTest {
         createDTO = new CreateCommentDTO(1, "Content");
         updateDTO = new UpdateCommentDTO(1, "Updated Content");
         SecurityContextHolder.setContext(securityContext);
-        org.mockito.Mockito.lenient().when(securityContext.getAuthentication()).thenReturn(authentication);
-        org.mockito.Mockito.lenient().when(authentication.getName()).thenReturn("testuser");
     }
     @AfterEach
     void tearDown() {
@@ -87,12 +84,12 @@ class CommentServiceTest {
         @Test
         @DisplayName("Creates comment using authenticated user from SecurityContext")
         void save_Success() {
-
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.getName()).thenReturn("testuser");
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
             when(postRepository.findById(1)).thenReturn(Optional.of(post));
             when(repository.save(any(Comment.class))).thenReturn(comment);
-            CompletableFuture<Comment> resultFuture = commentService.save(createDTO, "testuser");
-            Comment result = resultFuture.join();
+            Comment result = commentService.save(createDTO);
             assertNotNull(result);
             verify(userRepository).findByUsername("testuser");
             verify(postRepository).findById(1);
@@ -101,9 +98,10 @@ class CommentServiceTest {
         @Test
         @DisplayName("Throws EntityNotFoundException when authenticated user not found in DB")
         void save_Failure_UserNotFound() {
-
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.getName()).thenReturn("testuser");
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.empty());
-            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> commentService.save(createDTO, "testuser"));
+            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> commentService.save(createDTO));
             assertTrue(ex.getMessage().contains("Authenticated user not found"));
             verify(postRepository, never()).findById(any());
             verify(repository, never()).save(any());
@@ -111,10 +109,11 @@ class CommentServiceTest {
         @Test
         @DisplayName("Throws EntityNotFoundException when referenced post not found")
         void save_Failure_PostNotFound() {
-
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.getName()).thenReturn("testuser");
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
             when(postRepository.findById(1)).thenReturn(Optional.empty());
-            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> commentService.save(createDTO, "testuser"));
+            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> commentService.save(createDTO));
             assertTrue(ex.getMessage().contains("Post not found"));
             verify(repository, never()).save(any());
         }
@@ -125,7 +124,8 @@ class CommentServiceTest {
         @Test
         @DisplayName("Updates comment when authenticated user is the owner")
         void update_Success() {
-
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.getName()).thenReturn("testuser");
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
             when(repository.findById(1)).thenReturn(Optional.of(comment));
             when(postRepository.findById(1)).thenReturn(Optional.of(post));
@@ -134,33 +134,35 @@ class CommentServiceTest {
             when(comment.getUser()).thenReturn(user);
             when(comment.getPost()).thenReturn(post);
             when(repository.save(comment)).thenReturn(comment);
-            CompletableFuture<Comment> resultFuture = commentService.update(1, updateDTO, "testuser");
-            Comment result = resultFuture.join();
+            Comment result = commentService.update(1, updateDTO);
             assertNotNull(result);
             verify(repository).save(comment);
         }
         @Test
         @DisplayName("Throws EntityNotFoundException when authenticated user not found in DB")
         void update_Failure_UserNotFound() {
-
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.getName()).thenReturn("testuser");
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.empty());
-            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> commentService.update(1, updateDTO, "testuser"));
+            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> commentService.update(1, updateDTO));
             assertTrue(ex.getMessage().contains("Authenticated user not found"));
             verify(repository, never()).save(any());
         }
         @Test
         @DisplayName("Throws EntityNotFoundException when comment does not exist")
         void update_Failure_CommentNotFound() {
-
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.getName()).thenReturn("testuser");
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
             when(repository.findById(99)).thenReturn(Optional.empty());
-            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> commentService.update(99, updateDTO, "testuser"));
+            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> commentService.update(99, updateDTO));
             assertTrue(ex.getMessage().contains("Comment not found"));
         }
         @Test
         @DisplayName("Throws SecurityException when authenticated user does not own the comment")
         void update_Failure_NotOwner() {
-
+            when(securityContext.getAuthentication()).thenReturn(authentication);
+            when(authentication.getName()).thenReturn("testuser");
             User differentUser = mock(User.class);
             when(differentUser.getId()).thenReturn(999);
             when(user.getId()).thenReturn(1);
@@ -168,7 +170,7 @@ class CommentServiceTest {
             when(repository.findById(1)).thenReturn(Optional.of(comment));
             when(postRepository.findById(1)).thenReturn(Optional.of(post));
             when(comment.getUser()).thenReturn(differentUser);
-            assertThrows(SecurityException.class, () -> commentService.update(1, updateDTO, "testuser"));
+            assertThrows(SecurityException.class, () -> commentService.update(1, updateDTO));
             verify(repository, never()).save(any());
         }
     }
@@ -178,8 +180,6 @@ class CommentServiceTest {
         @Test
         @DisplayName("Deletes comment successfully")
         void delete_Success() {
-            org.mockito.Mockito.lenient().when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
-            org.mockito.Mockito.lenient().when(comment.getUser()).thenReturn(user);
             when(repository.findById(1)).thenReturn(Optional.of(comment));
             doNothing().when(repository).deleteById(1);
             assertDoesNotThrow(() -> commentService.delete(1));

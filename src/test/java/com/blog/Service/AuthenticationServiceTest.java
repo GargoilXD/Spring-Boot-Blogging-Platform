@@ -55,7 +55,7 @@ class AuthenticationServiceTest {
                 .password("hashed_pw")
                 .authorities(new SimpleGrantedAuthority("ROLE_READER"))
                 .build();
-        registerDTO = new RegisterUserDTO("testuser", "password123", "Test User", "test@example.com", "Male", Role.READER);
+        registerDTO = new RegisterUserDTO("testuser", "password123", "Test User", "test@example.com", "Male");
     }
     @Nested
     @DisplayName("Login")
