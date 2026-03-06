@@ -76,10 +76,7 @@ public class PostService {
         return CompletableFuture.completedFuture(repository.save(post));
     }
     @Transactional
-    @Caching(evict = {
-            @CacheEvict(cacheNames = "Post.findById", key = "#id"),
-            @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true)
-    })
+    @Caching(evict = { @CacheEvict(cacheNames = "Post.findById", key = "#id"), @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true)})
     public void delete(int id) {
         Post post = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Post not found: " + id));
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
