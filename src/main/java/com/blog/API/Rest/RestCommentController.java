@@ -17,13 +17,10 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
 import org.springframework.security.access.prepost.PreAuthorize;
 
 @RequiredArgsConstructor
@@ -36,121 +33,119 @@ public class RestCommentController {
 
     @GetMapping("/post/{postId}")
     @Operation(
-            summary = "Get comments for a post",
-            description = "Retrieves all comments associated with a specific blog post. Returns a list of comments with their IDs, author information, and content."
+        summary = "Get comments for a post",
+        description = "Retrieves all comments associated with a specific blog post. Returns a list of comments with their IDs, author information, and content."
     )
     @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Comments retrieved successfully",
-                    content = @Content(schema = @Schema(implementation = SuccessResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid post ID - ID must be a positive integer",
-                    content = @Content(schema = @Schema(implementation = String.class))
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Post not found - no post exists with the provided ID",
-                    content = @Content(schema = @Schema(implementation = String.class))
-            )
+        @ApiResponse(
+            responseCode = "200",
+            description = "Comments retrieved successfully",
+            content = @Content(schema = @Schema(implementation = SuccessResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid post ID - ID must be a positive integer",
+            content = @Content(schema = @Schema(implementation = String.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Post not found - no post exists with the provided ID",
+            content = @Content(schema = @Schema(implementation = String.class))
+        )
     })
     public ResponseEntity<SuccessResponse<List<ResponseCommentDTO>>> getCommentsForPost(
-            @Parameter(description = "ID of the post to retrieve comments for", required = true, example = "1")
-            @PathVariable @Min(1) Integer postId
+        @Parameter(description = "ID of the post to retrieve comments for", required = true, example = "1")
+        @PathVariable @Min(1) Integer postId
     ) {
         return ResponseEntity.ok(new SuccessResponse<>(HttpStatus.OK, "Comments retrieved successfully", commentService.findByPostId(postId).stream().map(ResponseCommentDTO::new).toList()));
     }
     @PostMapping
     @Operation(
-            summary = "Create new comment",
-            description = "Creates a new comment on a blog post. The comment will be associated with the specified user and post. Both user and post must exist.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Comment creation data",
-                    required = true,
-                    content = @Content(schema = @Schema(implementation = CreateCommentDTO.class))
-            )
+        summary = "Create new comment",
+        description = "Creates a new comment on a blog post. The comment will be associated with the specified user and post. Both user and post must exist.",
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Comment creation data",
+            required = true,
+            content = @Content(schema = @Schema(implementation = CreateCommentDTO.class))
+        )
     )
     @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "201",
-                    description = "Comment created successfully",
-                    content = @Content(schema = @Schema(implementation = SuccessResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid comment data - validation errors in request body",
-                    content = @Content(schema = @Schema(implementation = String.class))
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Post or user not found - referenced entities do not exist",
-                    content = @Content(schema = @Schema(implementation = String.class))
-            )
+        @ApiResponse(
+            responseCode = "201",
+            description = "Comment created successfully",
+            content = @Content(schema = @Schema(implementation = SuccessResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid comment data - validation errors in request body",
+            content = @Content(schema = @Schema(implementation = String.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Post or user not found - referenced entities do not exist",
+            content = @Content(schema = @Schema(implementation = String.class))
+        )
     })
     @PreAuthorize("isAuthenticated()")
-    public CompletableFuture<ResponseEntity<SuccessResponse<ResponseCommentDTO>>> createComment(@Valid @RequestBody CreateCommentDTO dto) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return commentService.save(dto, username).thenApply(comment -> ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse<>(HttpStatus.CREATED, "Comment created successfully", new ResponseCommentDTO(comment))));
+    public ResponseEntity<SuccessResponse<ResponseCommentDTO>> createComment(@Valid @RequestBody CreateCommentDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(new SuccessResponse<>(HttpStatus.CREATED, "Comment created successfully", new ResponseCommentDTO(commentService.save(dto))))  ;
     }
     @PutMapping("/{id}")
     @Operation(
-            summary = "Update comment",
-            description = "Updates an existing comment with the provided details. Only the comment content can be modified. The comment ID must exist.",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Comment update data",
-                    required = true,
-                    content = @Content(schema = @Schema(implementation = UpdateCommentDTO.class))
-            )
+        summary = "Update comment",
+        description = "Updates an existing comment with the provided details. Only the comment content can be modified. The comment ID must exist.",
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "Comment update data",
+            required = true,
+            content = @Content(schema = @Schema(implementation = UpdateCommentDTO.class))
+        )
     )
     @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Comment updated successfully",
-                    content = @Content(schema = @Schema(implementation = SuccessResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Comment not found - no comment exists with the provided ID",
-                    content = @Content(schema = @Schema(implementation = String.class))
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid comment data - validation errors in request body",
-                    content = @Content(schema = @Schema(implementation = String.class))
-            )
+        @ApiResponse(
+            responseCode = "200",
+            description = "Comment updated successfully",
+            content = @Content(schema = @Schema(implementation = SuccessResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Comment not found - no comment exists with the provided ID",
+            content = @Content(schema = @Schema(implementation = String.class))
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid comment data - validation errors in request body",
+            content = @Content(schema = @Schema(implementation = String.class))
+        )
     })
     @PreAuthorize("isAuthenticated()")
-    public CompletableFuture<ResponseEntity<SuccessResponse<ResponseCommentDTO>>> updateComment(
+    public ResponseEntity<SuccessResponse<ResponseCommentDTO>> updateComment(
             @Parameter(description = "ID of the comment to update", required = true, example = "1")
             @PathVariable Integer id,
             @Valid @RequestBody UpdateCommentDTO dto
     ) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return commentService.update(id, dto, username).thenApply(comment -> ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Comment updated successfully", new ResponseCommentDTO(comment))));
+        return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Comment updated successfully", new ResponseCommentDTO(commentService.update(id, dto))));
     }
     @DeleteMapping("/{id}")
     @Operation(
-            summary = "Delete comment",
-            description = "Deletes a comment by its unique identifier. This action is irreversible. The comment will be permanently removed from the system."
+        summary = "Delete comment",
+        description = "Deletes a comment by its unique identifier. This action is irreversible. The comment will be permanently removed from the system."
     )
     @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Comment deleted successfully",
-                    content = @Content(schema = @Schema(implementation = SuccessResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Comment not found - no comment exists with the provided ID",
-                    content = @Content(schema = @Schema(implementation = String.class))
-            )
+        @ApiResponse(
+            responseCode = "200",
+            description = "Comment deleted successfully",
+            content = @Content(schema = @Schema(implementation = SuccessResponse.class))
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Comment not found - no comment exists with the provided ID",
+            content = @Content(schema = @Schema(implementation = String.class))
+        )
     })
     @PreAuthorize("hasAnyRole('ADMIN', 'AUTHOR')")
     public ResponseEntity<SuccessResponse<Void>> deleteComment(
-            @Parameter(description = "ID of the comment to delete", required = true, example = "1")
-            @PathVariable Integer id
+        @Parameter(description = "ID of the comment to delete", required = true, example = "1")
+        @PathVariable Integer id
     ) {
         commentService.delete(id);
         return ResponseEntity.status(HttpStatus.OK).body(new SuccessResponse<>(HttpStatus.OK, "Comment deleted successfully"));
