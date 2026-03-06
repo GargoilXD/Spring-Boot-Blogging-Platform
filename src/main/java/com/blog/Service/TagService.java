@@ -15,6 +15,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.cache.annotation.Cacheable;
 
@@ -37,18 +38,20 @@ public class TagService {
         return repository.count();
     }
     @Caching(evict = {
-            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#dto.postId"),
+            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#postId"),
             @CacheEvict(cacheNames = {"PostTags.findAll", "PostTags.count"}, allEntries = true)
     })
+    @Async("blogExecutor")
     public void setPostTags(@NotNull(message = "Post ID is required") @Min(1) Integer postId, @NotEmpty(message = "Tags are required") List<String> tags) {
         postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found: " + postId));
         repository.findByPostId(postId).ifPresent(repository::delete);
         repository.save(new PostTags(null, postId, tags));
     }
     @Caching(evict = {
-            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#dto.postId"),
+            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#postId"),
             @CacheEvict(cacheNames = {"PostTags.findAll", "PostTags.count"}, allEntries = true)
     })
+    @Async("blogExecutor")
     public void addTagsToPost(@NotNull(message = "Post ID is required") @Min(1) Integer postId, @NotEmpty(message = "Tags are required") List<String> tags) {
         postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found: " + postId));
         PostTags existing = repository.findByPostId(postId).orElseThrow(() -> new EntityNotFoundException("Failed to Add Tags For Post:" + postId));
@@ -58,9 +61,10 @@ public class TagService {
         repository.save(existing);
     }
     @Caching(evict = {
-            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#dto.postId"),
+            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#postId"),
             @CacheEvict(cacheNames = {"PostTags.findAll", "PostTags.count"}, allEntries = true)
     })
+    @Async("blogExecutor")
     public void removeTagsFromPost(@NotNull(message = "Post ID is required") @Min(1) Integer postId, @NotEmpty(message = "Tags are required") List<String> tags) {
         postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found: " + postId));
         PostTags existing = repository.findByPostId(postId).orElseThrow(() -> new EntityNotFoundException("Failed to Remove Tags For Post:" + postId));
