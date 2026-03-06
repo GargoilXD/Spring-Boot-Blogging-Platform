@@ -7,6 +7,7 @@ import com.blog.DataTransporter.User.RegisterUserDTO;
 import com.blog.Exception.AuthenticationException;
 import com.blog.Security.JwtService;
 import com.blog.Service.AuthenticationService;
+import com.blog.Model.Role;
 import jakarta.persistence.EntityExistsException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,7 +41,7 @@ class RestAuthenticationControllerTest {
     @BeforeEach
     void setUp() {
         loginDTO    = new LoginUserDTO("user", "password123");
-        registerDTO = new RegisterUserDTO("user", "password123", "Full Name", "user@example.com", "Male");
+        registerDTO = new RegisterUserDTO("user", "password123", "Full Name", "user@example.com", "Male", Role.READER);
     }
     @Nested
     @DisplayName("POST /api/auth/login")

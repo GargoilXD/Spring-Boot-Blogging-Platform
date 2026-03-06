@@ -46,7 +46,7 @@ public class TagService {
         return repository.count();
     }
     @Caching(evict = {
-            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#dto.postId"),
+            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#postId"),
             @CacheEvict(cacheNames = {"PostTags.findAll", "PostTags.count"}, allEntries = true)
     })
     public void setPostTags(@NotNull(message = "Post ID is required") @Min(1) Integer postId, @NotEmpty(message = "Tags are required") List<String> tags) {
@@ -58,7 +58,7 @@ public class TagService {
         metricsService.incrementCounter("tag.setPostTags");
     }
     @Caching(evict = {
-            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#dto.postId"),
+            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#postId"),
             @CacheEvict(cacheNames = {"PostTags.findAll", "PostTags.count"}, allEntries = true)
     })
     public void addTagsToPost(@NotNull(message = "Post ID is required") @Min(1) Integer postId, @NotEmpty(message = "Tags are required") List<String> tags) {
@@ -73,7 +73,7 @@ public class TagService {
         metricsService.incrementCounter("tag.addTagsToPost");
     }
     @Caching(evict = {
-            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#dto.postId"),
+            @CacheEvict(cacheNames = "PostTags.findByPostId", key = "#postId"),
             @CacheEvict(cacheNames = {"PostTags.findAll", "PostTags.count"}, allEntries = true)
     })
     public void removeTagsFromPost(@NotNull(message = "Post ID is required") @Min(1) Integer postId, @NotEmpty(message = "Tags are required") List<String> tags) {

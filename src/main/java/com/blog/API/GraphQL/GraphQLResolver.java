@@ -15,10 +15,12 @@ import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Controller
 @RequiredArgsConstructor
@@ -66,12 +68,14 @@ public class GraphQLResolver {
         return true;
     }
     @MutationMapping
-    public Post createPost(@Argument("input") @NotNull CreatePostDTO input) {
-        return postService.save(input);
+    public CompletableFuture<Post> createPost(@Argument("input") @NotNull CreatePostDTO input) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return postService.save(input, username);
     }
     @MutationMapping
-    public Post updatePost(@Argument("id") @NotNull Integer id, @Argument("input") @NotNull UpdatePostDTO input) {
-        return postService.update(id, input);
+    public CompletableFuture<Post> updatePost(@Argument("id") @NotNull Integer id, @Argument("input") @NotNull UpdatePostDTO input) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return postService.update(id, input, username);
     }
     @MutationMapping
     public Boolean deletePost(@Argument @NotNull Integer id) {
@@ -81,12 +85,14 @@ public class GraphQLResolver {
 
     @MutationMapping
     public Boolean addComment(@Argument("input") @NotNull CreateCommentDTO input) {
-        commentService.save(input);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        commentService.save(input, username);
         return true;
     }
     @MutationMapping
     public Boolean updateComment(@Argument("id") @NotNull Integer id, @Argument("input") @NotNull UpdateCommentDTO input) {
-        commentService.update(id, input);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        commentService.update(id, input, username);
         return true;
     }
     @MutationMapping
@@ -101,6 +107,7 @@ public class GraphQLResolver {
     }
     @MutationMapping
     public Boolean addTagsToPost(@Argument @NotNull Integer postID, @Argument @NotNull List<String> tags) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
         tagService.addTagsToPost(postID, tags);
         return true;
     }
