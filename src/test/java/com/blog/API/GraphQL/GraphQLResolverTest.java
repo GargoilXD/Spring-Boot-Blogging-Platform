@@ -8,8 +8,10 @@ import com.blog.DataTransporter.User.RegisterUserDTO;
 import com.blog.Model.Comment;
 import com.blog.Model.Post;
 import com.blog.Model.PostTags;
+import com.blog.Model.Role;
 import com.blog.Service.*;
 import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,10 +24,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -39,6 +45,8 @@ class GraphQLResolverTest {
     @Mock private TagService            tagService;
     @Mock private Post                  post;
     @Mock private Comment               comment;
+    @Mock private SecurityContext       securityContext;
+    @Mock private Authentication        authentication;
 
     @InjectMocks
     private GraphQLResolver graphQLResolver;
@@ -47,7 +55,16 @@ class GraphQLResolverTest {
     @BeforeEach
     void setUp() {
         postTags = new PostTags("1", 1, List.of("tag1", "tag2"));
+        SecurityContextHolder.setContext(securityContext);
+        lenient().when(securityContext.getAuthentication()).thenReturn(authentication);
+        lenient().when(authentication.getName()).thenReturn("testuser");
     }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
     @Nested
     @DisplayName("findPostByID")
     class FindPostByID {
@@ -133,7 +150,7 @@ class GraphQLResolverTest {
     @Test
     @DisplayName("register: returns true on successful registration")
     void register_Success() {
-        RegisterUserDTO input = new RegisterUserDTO("user", "password123", "User Name", "user@email.com", "Other");
+        RegisterUserDTO input = new RegisterUserDTO("user", "password123", "User Name", "user@email.com", "Other", Role.READER);
         doNothing().when(authService).register(input);
         assertTrue(graphQLResolver.register(input));
         verify(authService).register(input);
@@ -142,8 +159,9 @@ class GraphQLResolverTest {
     @DisplayName("createPost: returns created Post")
     void createPost_Success() {
         CreatePostDTO input = new CreatePostDTO("Title", "Content", false);
-        when(postService.save(input)).thenReturn(post);
-        Post result = graphQLResolver.createPost(input);
+        when(postService.save(input, "testuser")).thenReturn(CompletableFuture.completedFuture(post));
+        CompletableFuture<Post> resultFuture = graphQLResolver.createPost(input);
+        Post result = resultFuture.join();
         assertNotNull(result);
         assertEquals(post, result);
     }
@@ -151,8 +169,9 @@ class GraphQLResolverTest {
     @DisplayName("updatePost: returns updated Post")
     void updatePost_Success() {
         UpdatePostDTO input = new UpdatePostDTO("Title", "Content", false);
-        when(postService.update(1, input)).thenReturn(post);
-        Post result = graphQLResolver.updatePost(1, input);
+        when(postService.update(1, input, "testuser")).thenReturn(CompletableFuture.completedFuture(post));
+        CompletableFuture<Post> resultFuture = graphQLResolver.updatePost(1, input);
+        Post result = resultFuture.join();
         assertNotNull(result);
     }
     @Nested
@@ -175,14 +194,14 @@ class GraphQLResolverTest {
     @DisplayName("addComment: returns true on success")
     void addComment_Success() {
         CreateCommentDTO input = new CreateCommentDTO(1, "Content");
-        when(commentService.save(input)).thenReturn(comment);
+        when(commentService.save(input, "testuser")).thenReturn(CompletableFuture.completedFuture(comment));
         assertTrue(graphQLResolver.addComment(input));
     }
     @Test
     @DisplayName("updateComment: returns true on success")
     void updateComment_Success() {
         UpdateCommentDTO input = new UpdateCommentDTO(1, "Updated");
-        when(commentService.update(1, input)).thenReturn(comment);
+        when(commentService.update(1, input, "testuser")).thenReturn(CompletableFuture.completedFuture(comment));
         assertTrue(graphQLResolver.updateComment(1, input));
     }
     @Test

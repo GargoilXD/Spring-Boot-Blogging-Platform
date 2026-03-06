@@ -58,50 +58,53 @@ public class SecurityConfig {
     }
 
     private static final String[] PUBLIC_ENDPOINTS = {
-        "/api/auth/login",
-        "/api/auth/register",
-        "/api/auth/refresh",
-        "/oauth2/**",
-        "/login/oauth2/**",
-        // OpenAPI / Swagger UI
-        "/swagger-ui/**",
-        "/v3/api-docs/**",
-        "/swagger-ui.html",
-        // GraphiQL playground
-        "/graphiql",
-        "/graphql",
-        // CSRF demo page
-        "/web/csrf-demo"
+            "/api/auth/login",
+            "/api/auth/register",
+            "/api/auth/refresh",
+            "/oauth2/**",
+            "/login/oauth2/**",
+            // OpenAPI / Swagger UI
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
+            "/swagger-ui.html",
+            // GraphiQL playground
+            "/graphiql",
+            "/graphql",
+            // CSRF demo page
+            "/web/csrf-demo",
+            // Actuator endpoints
+            "/actuator/**"
     };
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         CsrfTokenRequestAttributeHandler csrfHandler = new CsrfTokenRequestAttributeHandler();
         http.csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/**", "/graphql")
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .csrfTokenRequestHandler(csrfHandler)
-            )
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/tags/**").permitAll()
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/posts/**").hasAnyRole("AUTHOR", "ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/posts/**").hasAnyRole("AUTHOR", "ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/posts/**").hasAnyRole("AUTHOR", "ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/comments/**").authenticated()
-                .requestMatchers(HttpMethod.PUT, "/api/comments/**").authenticated()
-                .requestMatchers(HttpMethod.DELETE, "/api/comments/**").authenticated()
-                .requestMatchers("/api/auth/logout", "/api/auth/token/inspect").authenticated()
-                .requestMatchers("/web/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .oauth2Login(oauth2 -> oauth2.successHandler(oAuth2LoginSuccessHandler))
-            .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                        .ignoringRequestMatchers("/api/**", "/graphql")
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(csrfHandler)
+                )
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .dispatcherTypeMatchers(jakarta.servlet.DispatcherType.ASYNC, jakarta.servlet.DispatcherType.ERROR).permitAll()
+                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/tags/**").permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/posts/**").hasAnyRole("AUTHOR", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/posts/**").hasAnyRole("AUTHOR", "ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/posts/**").hasAnyRole("AUTHOR", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/comments/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/comments/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/comments/**").authenticated()
+                        .requestMatchers("/api/auth/logout", "/api/auth/token/inspect").authenticated()
+                        .requestMatchers("/web/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2.successHandler(oAuth2LoginSuccessHandler))
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
     @Bean

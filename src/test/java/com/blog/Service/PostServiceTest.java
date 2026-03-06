@@ -25,6 +25,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,6 +56,8 @@ class PostServiceTest {
         createDTO = new CreatePostDTO("Title", "Content", false);
         updateDTO = new UpdatePostDTO("Updated Title", "Updated Content", false);
         SecurityContextHolder.setContext(securityContext);
+        org.mockito.Mockito.lenient().when(securityContext.getAuthentication()).thenReturn(authentication);
+        org.mockito.Mockito.lenient().when(authentication.getName()).thenReturn("testuser");
     }
 
     @AfterEach
@@ -123,11 +126,11 @@ class PostServiceTest {
         @Test
         @DisplayName("Creates post using authenticated user from SecurityContext")
         void save_Success() {
-            when(securityContext.getAuthentication()).thenReturn(authentication);
-            when(authentication.getName()).thenReturn("testuser");
+
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
             when(repository.save(any(Post.class))).thenReturn(post);
-            Post result = postService.save(createDTO);
+            CompletableFuture<Post> resultFuture = postService.save(createDTO, "testuser");
+            Post result = resultFuture.join();
             assertNotNull(result);
             verify(userRepository).findByUsername("testuser");
             verify(user).addPost(any(Post.class));
@@ -136,10 +139,9 @@ class PostServiceTest {
         @Test
         @DisplayName("Throws EntityNotFoundException when authenticated user not found in DB")
         void save_Failure_UserNotFound() {
-            when(securityContext.getAuthentication()).thenReturn(authentication);
-            when(authentication.getName()).thenReturn("testuser");
+
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.empty());
-            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> postService.save(createDTO));
+            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> postService.save(createDTO, "testuser"));
             assertTrue(ex.getMessage().contains("Authenticated user not found"));
             verify(repository, never()).save(any());
         }
@@ -150,50 +152,47 @@ class PostServiceTest {
         @Test
         @DisplayName("Updates post when authenticated user is the owner")
         void update_Success() {
-            when(securityContext.getAuthentication()).thenReturn(authentication);
-            when(authentication.getName()).thenReturn("testuser");
+
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
             when(repository.findById(1)).thenReturn(Optional.of(post));
             when(user.getId()).thenReturn(42);
             when(post.getUser()).thenReturn(user);
             when(repository.save(post)).thenReturn(post);
-            Post result = postService.update(1, updateDTO);
+            CompletableFuture<Post> resultFuture = postService.update(1, updateDTO, "testuser");
+            Post result = resultFuture.join();
             assertNotNull(result);
             verify(repository).save(post);
         }
         @Test
         @DisplayName("Throws EntityNotFoundException when authenticated user not found in DB")
         void update_Failure_UserNotFound() {
-            when(securityContext.getAuthentication()).thenReturn(authentication);
-            when(authentication.getName()).thenReturn("testuser");
+
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.empty());
-            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> postService.update(1, updateDTO));
+            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> postService.update(1, updateDTO, "testuser"));
             assertTrue(ex.getMessage().contains("Authenticated user not found"));
             verify(repository, never()).save(any());
         }
         @Test
         @DisplayName("Throws EntityNotFoundException when post does not exist")
         void update_Failure_PostNotFound() {
-            when(securityContext.getAuthentication()).thenReturn(authentication);
-            when(authentication.getName()).thenReturn("testuser");
+
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
             when(repository.findById(99)).thenReturn(Optional.empty());
-            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> postService.update(99, updateDTO));
+            EntityNotFoundException ex = assertThrows(EntityNotFoundException.class, () -> postService.update(99, updateDTO, "testuser"));
             assertTrue(ex.getMessage().contains("Post not found"));
             verify(repository, never()).save(any());
         }
         @Test
         @DisplayName("Throws SecurityException when authenticated user does not own the post")
         void update_Failure_NotOwner() {
-            when(securityContext.getAuthentication()).thenReturn(authentication);
-            when(authentication.getName()).thenReturn("testuser");
+
             User postOwner = mock(User.class);
             when(postOwner.getId()).thenReturn(999);
             when(user.getId()).thenReturn(1);
             when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
             when(repository.findById(1)).thenReturn(Optional.of(post));
             when(post.getUser()).thenReturn(postOwner);
-            assertThrows(SecurityException.class, () -> postService.update(1, updateDTO));
+            assertThrows(SecurityException.class, () -> postService.update(1, updateDTO, "testuser"));
             verify(repository, never()).save(any());
         }
     }
@@ -203,6 +202,8 @@ class PostServiceTest {
         @Test
         @DisplayName("Deletes post and all associated data")
         void delete_Success() {
+            org.mockito.Mockito.lenient().when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
+            org.mockito.Mockito.lenient().when(post.getUser()).thenReturn(user);
             when(repository.findById(1)).thenReturn(Optional.of(post));
             doNothing().when(tagService).deleteByPostId(1);
             doNothing().when(commentRepository).deleteByPostId(1);

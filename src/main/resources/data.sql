@@ -1,11 +1,11 @@
-INSERT INTO users (username, password, full_name, email, gender) VALUES
-('Kobby', '$argon2id$v=19$m=65536,t=3,p=4$l079JRQ4ZC565vPJp727TIUfqls2EcCNAE4zSpYn0q4$ATE6KWSwP0cH889OKqdk9KnG87NF7c6CiyX4XNLjdz4', 'Kwabena Edusei', 'kobby@gmail.com', 'M'),
-('Ama', '$argon2id$v=19$m=65536,t=3,p=4$cb9LqPfDVp4UWq16sxi9pKaYBs62qZLYbmEN4wTU9GA$knUuUmlohiQVxdN08spX8+yETI4QzaPRNBjfquhmMmg', 'Ama Asante', 'ama@gmail.com', 'F'),
-('Kwame', '$argon2id$v=19$m=65536,t=3,p=4$l079JRQ4ZC565vPJp727TIUfqls2EcCNAE4zSpYn0q4$ATE6KWSwP0cH889OKqdk9KnG87NF7c6CiyX4XNLjdz4', 'Kwame Nkrumah', 'kwame@example.com', 'M'),
-('Efia', '$argon2id$v=19$m=65536,t=3,p=4$cb9LqPfDVp4UWq16sxi9pKaYBs62qZLYbmEN4wTU9GA$knUuUmlohiQVxdN08spX8+yETI4QzaPRNBjfquhmMmg', 'Efia Darko', 'efia@example.com', 'F'),
-('Kofi', '$argon2id$v=19$m=65536,t=3,p=4$l079JRQ4ZC565vPJp727TIUfqls2EcCNAE4zSpYn0q4$ATE6KWSwP0cH889OKqdk9KnG87NF7c6CiyX4XNLjdz4', 'Kofi Mensah', 'kofi@example.com', 'M'),
-('Adwoa', '$argon2id$v=19$m=65536,t=3,p=4$cb9LqPfDVp4UWq16sxi9pKaYBs62qZLYbmEN4wTU9GA$knUuUmlohiQVxdN08spX8+yETI4QzaPRNBjfquhmMmg', 'Adwoa Boateng', 'adwoa@example.com', 'F'),
-('Yaw', '$argon2id$v=19$m=65536,t=3,p=4$l079JRQ4ZC565vPJp727TIUfqls2EcCNAE4zSpYn0q4$ATE6KWSwP0cH889OKqdk9KnG87NF7c6CiyX4XNLjdz4', 'Yaw Osei', 'yaw@example.com', 'M')
+INSERT INTO users (username, password, full_name, email, gender, role) VALUES
+('Kobby', '$argon2id$v=19$m=65536,t=3,p=4$l079JRQ4ZC565vPJp727TIUfqls2EcCNAE4zSpYn0q4$ATE6KWSwP0cH889OKqdk9KnG87NF7c6CiyX4XNLjdz4', 'Kwabena Edusei', 'kobby@gmail.com', 'M', 'ADMIN'),
+('Ama', '$argon2id$v=19$m=65536,t=3,p=4$cb9LqPfDVp4UWq16sxi9pKaYBs62qZLYbmEN4wTU9GA$knUuUmlohiQVxdN08spX8+yETI4QzaPRNBjfquhmMmg', 'Ama Asante', 'ama@gmail.com', 'F', 'AUTHOR'),
+('Kwame', '$argon2id$v=19$m=65536,t=3,p=4$l079JRQ4ZC565vPJp727TIUfqls2EcCNAE4zSpYn0q4$ATE6KWSwP0cH889OKqdk9KnG87NF7c6CiyX4XNLjdz4', 'Kwame Nkrumah', 'kwame@example.com', 'M', 'AUTHOR'),
+('Efia', '$argon2id$v=19$m=65536,t=3,p=4$cb9LqPfDVp4UWq16sxi9pKaYBs62qZLYbmEN4wTU9GA$knUuUmlohiQVxdN08spX8+yETI4QzaPRNBjfquhmMmg', 'Efia Darko', 'efia@example.com', 'F', 'AUTHOR'),
+('Kofi', '$argon2id$v=19$m=65536,t=3,p=4$l079JRQ4ZC565vPJp727TIUfqls2EcCNAE4zSpYn0q4$ATE6KWSwP0cH889OKqdk9KnG87NF7c6CiyX4XNLjdz4', 'Kofi Mensah', 'kofi@example.com', 'M', 'AUTHOR'),
+('Adwoa', '$argon2id$v=19$m=65536,t=3,p=4$cb9LqPfDVp4UWq16sxi9pKaYBs62qZLYbmEN4wTU9GA$knUuUmlohiQVxdN08spX8+yETI4QzaPRNBjfquhmMmg', 'Adwoa Boateng', 'adwoa@example.com', 'F', 'AUTHOR'),
+('Yaw', '$argon2id$v=19$m=65536,t=3,p=4$l079JRQ4ZC565vPJp727TIUfqls2EcCNAE4zSpYn0q4$ATE6KWSwP0cH889OKqdk9KnG87NF7c6CiyX4XNLjdz4', 'Yaw Osei', 'yaw@example.com', 'M', 'AUTHOR')
 ON CONFLICT DO NOTHING;
 
 INSERT INTO posts (user_id, title, body, is_draft) VALUES

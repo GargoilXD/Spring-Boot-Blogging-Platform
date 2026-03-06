@@ -15,6 +15,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @Validated
@@ -48,35 +50,41 @@ public class PostService {
     }
     @Transactional
     @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true)
-    public Post save(@NotNull CreatePostDTO dto) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+    @Async("blogExecutor")
+    public CompletableFuture<Post> save(@NotNull CreatePostDTO dto, String username) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("Authenticated user not found: " + username));
         Post post = new Post();
         post.setTitle(dto.title());
         post.setBody(dto.body());
         post.setDraft(dto.draft());
         user.addPost(post);
-        return repository.save(post);
+        return CompletableFuture.completedFuture(repository.save(post));
     }
     @Transactional
-    @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true)
-    public Post update(@NotNull(message = "Post id is required") @Min(1) Integer postId, @NotNull UpdatePostDTO dto) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "Post.findById", key = "#postId"),
+            @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true)
+    })
+    @Async("blogExecutor")
+    public CompletableFuture<Post> update(@NotNull(message = "Post id is required") @Min(1) Integer postId, @NotNull UpdatePostDTO dto, String username) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("Authenticated user not found: " + username));
         Post post = repository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found: " + postId));
         if (!post.getUser().getId().equals(user.getId())) throw new SecurityException("User does not own this post: " + postId);
         post.setTitle(dto.title());
         post.setBody(dto.body());
         post.setDraft(dto.draft());
-        return repository.save(post);
+        return CompletableFuture.completedFuture(repository.save(post));
     }
     @Transactional
     @Caching(evict = {
-        @CacheEvict(cacheNames = "Post.findById", key = "#id"),
-        @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true)
+            @CacheEvict(cacheNames = "Post.findById", key = "#id"),
+            @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true)
     })
     public void delete(int id) {
-        repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Post not found: " + id));
+        Post post = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Post not found: " + id));
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("Authenticated user not found: " + username));
+        if (!post.getUser().getId().equals(user.getId())) throw new SecurityException("User does not own this post: " + id);
         tagService.deleteByPostId(id);
         commentRepository.deleteByPostId(id);
         repository.deleteById(id);

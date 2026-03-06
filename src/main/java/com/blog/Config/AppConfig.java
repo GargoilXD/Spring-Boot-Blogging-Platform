@@ -37,7 +37,8 @@ public class AppConfig {
 				"Comment.findByPostId",
 				"PostTags.findAll",
 				"PostTags.findByPostId",
-				"PostTags.count"
+				"PostTags.count",
+				"BlogUserDetailsService.loadUserByUsername"
 		);
 	}
 }

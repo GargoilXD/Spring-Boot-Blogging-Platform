@@ -2,6 +2,7 @@ package com.blog.API.Rest;
 
 import com.blog.API.Response.SuccessResponse;
 import com.blog.DataTransporter.Tags.ResponseTagsDTO;
+import com.blog.DataTransporter.Tags.TagDTO;
 import com.blog.Service.TagService;
 import com.blog.Model.PostTags;
 import jakarta.persistence.EntityNotFoundException;
@@ -59,7 +60,7 @@ class RestTagControllerTest {
     @Test
     void setPostTags_Success() {
         doNothing().when(tagService).setPostTags(1, List.of("tag1", "tag2"));
-        ResponseEntity<SuccessResponse<Void>> response = tagController.setPostTags(1, List.of("tag1", "tag2"));
+        ResponseEntity<SuccessResponse<Void>> response = tagController.setPostTags(1, new TagDTO(List.of("tag1", "tag2")));
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
         verify(tagService).setPostTags(1, List.of("tag1", "tag2"));
@@ -67,14 +68,14 @@ class RestTagControllerTest {
     @Test
     void setPostTags_Failure_PropagatesException() {
         doThrow(new EntityNotFoundException("Post not found")).when(tagService).setPostTags(1, List.of("tag1", "tag2"));
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> tagController.setPostTags(1, List.of("tag1", "tag2")));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> tagController.setPostTags(1, new TagDTO(List.of("tag1", "tag2"))));
         assertEquals("Post not found", exception.getMessage());
         verify(tagService).setPostTags(1, List.of("tag1", "tag2"));
     }
     @Test
     void addTagsToPost_Success() {
         doNothing().when(tagService).addTagsToPost(1, List.of("tag3"));
-        ResponseEntity<SuccessResponse<Void>> response = tagController.addTagsToPost(1, List.of("tag3"));
+        ResponseEntity<SuccessResponse<Void>> response = tagController.addTagsToPost(1, new TagDTO(List.of("tag3")));
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         verify(tagService).addTagsToPost(1, List.of("tag3"));
@@ -82,14 +83,14 @@ class RestTagControllerTest {
     @Test
     void addTagsToPost_Failure_PropagatesException() {
         doThrow(new EntityNotFoundException("Post not found")).when(tagService).addTagsToPost(1, List.of("tag3"));
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> tagController.addTagsToPost(1, List.of("tag3")));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> tagController.addTagsToPost(1, new TagDTO(List.of("tag3"))));
         assertEquals("Post not found", exception.getMessage());
         verify(tagService).addTagsToPost(1, List.of("tag3"));
     }
     @Test
     void removeTagsFromPost_Success() {
         doNothing().when(tagService).removeTagsFromPost(1, List.of("tag3"));
-        ResponseEntity<SuccessResponse<Void>> response = tagController.removeTagsFromPost(1, List.of("tag3"));
+        ResponseEntity<SuccessResponse<Void>> response = tagController.removeTagsFromPost(1, new TagDTO(List.of("tag3")));
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         verify(tagService).removeTagsFromPost(1, List.of("tag3"));
@@ -97,7 +98,7 @@ class RestTagControllerTest {
     @Test
     void removeTagsFromPost_Failure_PropagatesException() {
         doThrow(new EntityNotFoundException("Post not found")).when(tagService).removeTagsFromPost(1, List.of("tag3"));
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> tagController.removeTagsFromPost(1, List.of("tag3")));
+        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> tagController.removeTagsFromPost(1, new TagDTO(List.of("tag3"))));
         assertEquals("Post not found", exception.getMessage());
         verify(tagService).removeTagsFromPost(1, List.of("tag3"));
     }
