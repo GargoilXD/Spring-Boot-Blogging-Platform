@@ -18,23 +18,16 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class CommentService {
     final UserRepository userRepository;
     final PostRepository postRepository;
     final CommentRepository repository;
-    final PerformanceMetricsService metricsService;
 
     @Cacheable(cacheNames = "Comment.findByPostId", key = "#id")
     public List<Comment> findByPostId(int id) {
-        long start = System.currentTimeMillis();
-        List<Comment> result = repository.findByPostId(id);
-        metricsService.recordLatency("comment.findByPostId", System.currentTimeMillis() - start);
-        metricsService.incrementCounter("comment.findByPostId");
-        return result;
+        return repository.findByPostId(id);
     }
     @Caching(evict = {@CacheEvict(cacheNames = "Comment.findByPostId", key = "#dto.postId()")})
     public Comment save(CreateCommentDTO dto) {
@@ -70,6 +63,5 @@ public class CommentService {
     public void delete(@NotNull(message = "Comment id is required") @Min(1) Integer id) {
         repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Comment not found: " + id));
         repository.deleteById(id);
-        metricsService.incrementCounter("comment.delete");
     }
 }
