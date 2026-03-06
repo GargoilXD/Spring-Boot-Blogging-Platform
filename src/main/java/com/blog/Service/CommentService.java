@@ -24,23 +24,16 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class CommentService {
     final UserRepository userRepository;
     final PostRepository postRepository;
     final CommentRepository repository;
-    final PerformanceMetricsService metricsService;
 
     @Cacheable(cacheNames = "Comment.findByPostId", key = "#id")
     public List<Comment> findByPostId(int id) {
-        long start = System.currentTimeMillis();
-        List<Comment> result = repository.findByPostId(id);
-        metricsService.recordLatency("comment.findByPostId", System.currentTimeMillis() - start);
-        metricsService.incrementCounter("comment.findByPostId");
-        return result;
+        return repository.findByPostId(id);
     }
     @Transactional
     @Caching(evict = {@CacheEvict(cacheNames = "Comment.findByPostId", key = "#dto.postId()")})
@@ -74,6 +67,5 @@ public class CommentService {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new EntityNotFoundException("Authenticated user not found: " + username));
         if (!comment.getUser().getId().equals(user.getId())) throw new SecurityException("User does not own this comment: " + id);
         repository.deleteById(id);
-        metricsService.incrementCounter("comment.delete");
     }
 }

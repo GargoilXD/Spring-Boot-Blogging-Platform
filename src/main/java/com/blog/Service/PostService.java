@@ -22,7 +22,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -34,46 +33,20 @@ public class PostService {
     private final UserRepository userRepository;
     private final CommentRepository commentRepository;
     private final TagService tagService;
-    private final PostCacheService postCacheService;
-    private final PerformanceMetricsService metricsService;
 
     @Cacheable(cacheNames = "Post.findById", key = "#id")
     public Optional<Post> findById(int id) {
-        long start = System.currentTimeMillis();
-        Optional<Post> result = repository.findById(id);
-        result.ifPresent(post -> {
-            postCacheService.put(post);
-            postCacheService.incrementViews(id);
-        });
-        metricsService.recordLatency("post.findById", System.currentTimeMillis() - start);
-        metricsService.incrementCounter("post.findById");
-        return result;
+        return repository.findById(id);
     }
 
     @Cacheable(cacheNames = "Post.getAll", key = "{#pageable.pageNumber, #pageable.pageSize, #pageable.sort}")
     public Page<Post> findAll(Pageable pageable) {
-        long start = System.currentTimeMillis();
-        Page<Post> page = repository.findAll(pageable);
-        page.getContent().forEach(postCacheService::put);
-        metricsService.recordLatency("post.findAll", System.currentTimeMillis() - start);
-        metricsService.incrementCounter("post.findAll");
-        return page;
+        return repository.findAll(pageable);
     }
 
     @Cacheable(cacheNames = "Post.count")
     public long count() {
         return repository.count();
-    }
-    public List<Post> getTrending(int top) {
-        postCacheService.rebuildTrending(top);
-        return postCacheService.getTrending();
-    }
-    public List<Post> search(String keyword) {
-        if (postCacheService.size() > 0) {
-            return postCacheService.search(keyword);
-        }
-        repository.findAll().forEach(postCacheService::put);
-        return postCacheService.search(keyword);
     }
     @Transactional
     @CacheEvict(cacheNames = {"Post.getAll", "Post.count"}, allEntries = true)
@@ -115,8 +88,5 @@ public class PostService {
         tagService.deleteByPostId(id);
         commentRepository.deleteByPostId(id);
         repository.deleteById(id);
-        postCacheService.evict(id);
-        metricsService.recordLatency("post.delete", System.currentTimeMillis() - start);
-        metricsService.incrementCounter("post.delete");
     }
 }
